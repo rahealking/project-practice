@@ -4,6 +4,23 @@ class node{
         this.value=value;
         this.next=null;
     }
+    static listMid(head){
+        var slow=head;
+        var fast=head;
+        while(fast!=null){
+            slow=slow.next;
+            if(fast.next!=null){
+                fast=fast.next.next;
+            }else{
+                break;
+            }
+        }
+        if(slow!=null){
+            return slow;
+        }else{
+            return head;
+        }
+    }
 }
 class queue{
     constructor(){
@@ -123,6 +140,9 @@ class queue{
                 i=Number(i);
                 solves.reverseFirstKElements(q,i);
                 console.log("[information]:[queue reversed in k groups]");
+            }else if(command=="interleave"){
+                solves.interleave(q);
+                console.log("[information]:[queue interleaved]");
             }else{
                 console.log("[unknown command]:["+command+"]");
             }
@@ -141,6 +161,9 @@ class stack{
             temp=temp.next;
         }
         return arr;
+    }
+    size(){
+        return this.toList().length;
     }
     push(value){
         var newNode=new node(value);
@@ -181,7 +204,7 @@ class stack{
         var command="";
         var i=0;
         while(true){
-            command=prompt("[command]:$");
+            command=prompt("[command]:$ ");
             if(command=="exit"){
                 process.stdout.write("process finished with command ");
                 console.log(["exit"]);
@@ -189,7 +212,35 @@ class stack{
             }else if(command=="info"){
                 console.log("[stack information]");
                 process.stdout.write("[list]:");
-                console.log(this.toList());
+                console.log(st.toList());
+                process.stdout.write("[size]:");
+                console.log([st.size()]);
+                process.stdout.write("[top]:");
+                console.log([st.top!=null?st.top.value:undefined]);
+                process.stdout.write("[empty]:");
+                console.log([st.top==null?true:false]);
+                process.stdout.write("[full]:");
+                console.log([false]);
+                process.stdout.write("[limit]:");
+                console.log(["no limits"]);
+            }else if(command=="push"){
+                i=Number(prompt("[value]$ "));
+                st.push(i);
+                process.stdout.write("[pushed]:");
+                console.log([i]);
+            }else if(command=="pop"){
+                process.stdout.write("[popped]:");
+                console.log([st.pop()]);
+            }else if(command=="peek"){
+                i=prompt("[position]$ ");
+                process.stdout.write("[peeked element]:");
+                console.log([st.peek(i)]);
+            }else if(command=="reverse"){
+                st.reverse();
+                console.log("[information]:[stack reversed]");
+            }else{
+                process.stdout.write("[unknown command]:");
+                console.log([command]);
             }
         }
     }
@@ -211,10 +262,44 @@ class solves{
         }
         return;
     }
+    static interleave(q){
+        if(q.front!=null){
+            var i=q.listSize();
+            i=Number.parseInt(i/2);
+            var st=new stack();
+            while(i>0){
+                st.push(q.dequeue());
+                i-=1;
+            }while(st.top!=null){
+                q.enqueue(st.pop());
+            }
+            i=q.listSize();
+            i-=Number.parseInt(i/2);
+            while(i>0){
+                q.enqueue(q.dequeue());
+                i-=1;
+            }
+            i=q.listSize();
+            i=Number.parseInt(i/2);
+            while(i>0){
+                st.push(q.dequeue());
+                i-=1;
+            }while(st.top!=null){
+                q.enqueue(st.pop());
+                if(st.size()==0){
+                    if(Number.parseInt(((q.listSize()+st.size()))/2)%2!=0){
+                        break;
+                    }
+                }
+                q.enqueue(q.dequeue());
+            }
+        }
+        return;
+    }
 }
 
 function main(){
-    stack.debug();
+    queue.debug();
     return;
 }
 main();

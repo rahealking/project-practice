@@ -1,70 +1,92 @@
 var prompt=require("prompt-sync")();
-class st{
-    constructor(){
-        this.arr=[];
-    }
-    append(value){
-        this.arr.push(value);
-        return value;
-    }
-    out(){
-        return this.arr.pop();
-    }
-}
-class queue{
-    constructor(){
-        this.input=new st();
-        this.output=new st();
-    }
-    enqueue(value){
-        return this.input.append(value);
-    }
-    dequeue(){
-        var value=this.output.out();
-        if(value==undefined){
-            value=this.input.out();
-            while(value!=undefined){
-                this.output.append(value);
-                value=this.input.out();
-            }
-            value=this.output.out();
-        }
-        return value;
-    }
-}
 class stack{
-    constructor(){
-        this.primaryQueue=new queue();
-        this.secondaryQueue=new queue();
-    }
-    append(value){
-        this.secondaryQueue.enqueue(value);
-        var value=this.primaryQueue.dequeue();
-        while(value!=undefined){
-            this.secondaryQueue.enqueue(value);
-            var value=this.primaryQueue.dequeue();
+    constructor(size,k){
+        this.arr=[];
+        this.front=[];
+        this.rare=[];
+        while(k>0){
+            this.front.push(-1);
+            this.rare.push(-1);
+            k-=1;
+        }while(size>0){
+            this.arr.push(0);
+            size-=1;
         }
-        value=this.secondaryQueue;
-        this.secondaryQueue=this.primaryQueue;
-        this.primaryQueue=value;
     }
-    out(){
-        return this.primaryQueue.dequeue();
+    enqueue(k,value){
+        if(this.rare[this.rare.length-1]<this.arr.length-1){
+            var i=this.rare.length-1;
+            var bool=false;
+            var j=0;
+            while(i>k-1){
+                if(i==0){
+                    if(this.front[i]>-1&&this.rare[i]>=this.front[i]){
+                        bool=true;
+                    }
+                }else{
+                    if(i>0){
+                        if(this.front[i]>this.front[i-1]&&this.rare[i]>=this.front[i]){
+                            bool=true;
+                        }
+                    }
+                }
+                if(bool==true){
+                    j=this.rare[i];
+                    while(j>this.front[i]-1){
+                        this.arr[j+1]=this.arr[j];
+                        j-=1;
+                    }
+                    this.front[i]+=1;
+                    this.rare[i]+=1;
+                }
+                i-=1;
+            }
+            this.arr[--this.front[k]]=value;
+            return value;
+        }else{
+            console.error("main queue overflowed;");
+            return undefined;
+        }
+    }
+    dequeue(k){
+        var bool=false;
+        if(k==0){
+            if(this.front[k]>-1&&this.rare[k]>=this.front[k]){
+                bool=true;
+            }
+        }else{
+            if(k>0){
+                if(this.front[k]>this.front[k-1]&&this.rare[k]>=this.front[k]){
+                    bool=true;
+                }
+            }
+        }
+        if(bool==true){
+            var value=this.arr[this.front[k]];
+            var i=0;
+            var j=0;
+            i=k;
+            while(i<this.front.length){
+                j=this.front[i];
+                while(j<this.rare[i]+1){
+                    this.arr[j]=this.arr[j+1];
+                    j+=1;
+                }
+                this.front[i]-=1;
+                this.rare[i]-=1;
+                i+=1;
+            }
+            this.front[k]+=1;
+            return value;
+        }else{
+            console.log("queue overflowed;");
+            return undefined;
+        }
+    }
+    static debug(){
     }
 }
 function main(){
-    var stk=new stack();
-    stk.append(Number(prompt(":")));
-    stk.append(Number(prompt(":")));
-    stk.append(Number(prompt(":")));
-    stk.append(Number(prompt(":")));
-    console.log(stk.out());
-    console.log(stk.out());
-    console.log(stk.out());
-    console.log(stk.out());
-    console.log(stk.out());
-    stk.append(Number(prompt(":")));
-    console.log(stk.out());
     return;
 }
 main();
