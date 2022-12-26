@@ -1,5 +1,5 @@
 var prompt=require("prompt-sync")();
-class stack{
+class queue{
     constructor(size,k){
         this.arr=[];
         this.front=[];
@@ -20,12 +20,12 @@ class stack{
             var j=0;
             while(i>k-1){
                 if(i==0){
-                    if(this.front[i]>-1&&this.rare[i]>=this.front[i]){
+                    if(this.front[i]>-1&&this.rare[i]>this.front[i]-1){
                         bool=true;
                     }
                 }else{
                     if(i>0){
-                        if(this.front[i]>this.front[i-1]&&this.rare[i]>=this.front[i]){
+                        if(this.front[i]>this.front[i-1]&&this.rare[i]>this.front[i]-1){
                             bool=true;
                         }
                     }
@@ -84,9 +84,41 @@ class stack{
         }
     }
     static debug(){
+        console.log(["debugging"]);
+        var command="";
+        var i=0;
+        i=Number.parseInt(prompt("[size]$ "));
+        var st=new queue(i,Number.parseInt(prompt("[k]$ ")));
+        while(true){
+            command=prompt("[command]$ ");
+            if(command=="exit"){
+                console.log("process finished;");
+                return;
+            }else if(command=="info"){
+                console.log(["queue information"]);
+                process.stdout.write("[array]:");
+                console.log(st.arr);
+                process.stdout.write("[front]:");
+                console.log(st.front);
+                process.stdout.write("[rare]:");
+                console.log(st.rare);
+                process.stdout.write("[size]:");
+                console.log([st.arr.length]);
+            }else if(command=="enqueue"){
+                st.enqueue(Number.parseInt(prompt("[k]$ ")),Number.parseInt(prompt("[value]$ ")));
+                console.log(["done"]);
+            }else if(command=="dequeue"){
+                process.stdout.write("dequeued ");
+                console.log([st.dequeue(Number.parseInt(prompt("[k]$ ")))]);
+            }else{
+                process.stdout.write("unknown command ");
+                console.log([command]);
+            }
+        }
     }
 }
 function main(){
+    queue.debug();
     return;
 }
 main();

@@ -1,0 +1,37 @@
+to do : implement k queues in 1 array in java;
+---------
+[stack:function activity log]
+input matrix:
+    1 1 1
+    1 1 1
+    1 1 2
+int time=0;
+int i=0,j=0;
+queue primaryQueue=null;
+queue secondaryQueue=null;
+queue tempQueue=null;
+node value=null;
+primaryQueue.list:
+[{2,2}]
+value={2,2};
+primaryQueue.list:
+[-]// empty;
+input matrix:
+    1 1 1
+    1 1 2
+    1 1 2
+secondaryQueue.list:
+[{1,2}]
+input matrix:
+    1 1 1
+    1 1 2
+    1 2 2
+secondaryQueue.list:
+[{1,2},{2,1}]
+time=1;
+primaryQueue<=>secondaryQueue;
+value={1,2};
+primaryQueue.list:
+[{2,1}]
+
+[continue!]

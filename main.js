@@ -97,7 +97,7 @@ class queue{
                 console.log(`process finished with command [${command}]`);
                 return;
             }else if(command=="info"){
-                console.log("[queue information]");
+                console.log(["queue information"]);
                 process.stdout.write("[list]:");
                 console.log(q.toList());
                 process.stdout.write("[size]:");
@@ -121,7 +121,7 @@ class queue{
                 process.stdout.write("[full]:");
                 console.log(false)
                 process.stdout.write("[limit]:");
-                process.stdout.write("[no limits]\n");
+                console.log(["no limits"]);
             }else if(command=="enqueue"){
                 i=prompt("[value]$ ");
                 i=Number(i);
@@ -297,9 +297,8 @@ class solves{
         return;
     }
 }
-
 function main(){
-    queue.debug();
+    // queue.debug();
     return;
 }
 main();
