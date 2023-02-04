@@ -84,6 +84,11 @@ class stack{
         }
     }
     static debug(){
+        console.log("[debugging]");
+        var i=0;
+        i=Number(prompt("[size]$ "));
+        var q=new queue(i,Number(prompt("[k]$ ")));
+        
     }
 }
 function main(){
