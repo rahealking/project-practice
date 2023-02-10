@@ -1,3 +1,6 @@
+use project_practice::*;
 fn main() {
-    println!("Hello, world!");
+    let mut message:String=String::new();
+    message=String::from("hello");
+    println!("{}",message);
 }
