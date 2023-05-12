@@ -2,5 +2,6 @@
 *.exe
 *.json
 node_modules/
+.devcontainer
 # Added by cargo
 /target
