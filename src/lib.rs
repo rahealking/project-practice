@@ -44,8 +44,8 @@ pub struct Node{
 #[derive(Debug)]
 pub struct Shell{
     pub data:std::rc::Rc<Option<std::cell::RefCell<Node>>>,
-    pub next:std::rc::Rc<Option<std::cell::RefCell<Shell>>>,
     pub prev:std::rc::Rc<Option<std::cell::RefCell<Shell>>>,
+    pub next:std::rc::Rc<Option<std::cell::RefCell<Shell>>>,
     pub value:i32
 }impl Shell{
     pub fn new(data:i32,
@@ -155,7 +155,52 @@ pub struct Shell{
             Some(_)=>{false},None=>{true}
         }
     }
-}pub struct Tree;impl Tree{
+}pub struct Stack{
+    pub top:std::rc::Rc<Option<std::cell::RefCell<Shell>>>
+}impl Stack{
+    pub fn new()->Stack{
+        return Stack{top:std::rc::Rc::new(None)};
+    }
+    pub fn push(&mut self,n:std::rc::Rc<Option<std::cell::RefCell<Node>>>,v:i32){
+        let temp:std::rc::Rc<Option<std::cell::RefCell<Shell>>>=Shell::new(v,n);
+        match temp.as_ref(){
+            Some(s)=>{
+                s.borrow_mut().next=self.top.clone();
+            },None=>{panic!("unexpected None");}
+        }match self.top.as_ref(){
+            Some(s)=>{
+                s.borrow_mut().prev=temp.clone();
+            },None=>{}
+        }self.top=temp;
+        return;
+    }pub fn pop(&mut self)->std::rc::Rc<Option<std::cell::RefCell<Shell>>>{
+        let temp:std::rc::Rc<Option<std::cell::RefCell<Shell>>>=self.top.clone();
+        match self.top.clone().as_ref(){
+            Some(s)=>{
+                self.top=s.borrow().next.clone();
+                match self.top.as_ref(){
+                    Some(h)=>{
+                        h.borrow_mut().prev=std::rc::Rc::new(None);
+                    },None=>{}
+                }
+            },None=>{}
+        }return temp;
+    }pub fn find(&self,n:std::rc::Rc<Option<std::cell::RefCell<Node>>>)->std::rc::Rc<Option<std::cell::RefCell<Shell>>>{
+        let mut temp:std::rc::Rc<Option<std::cell::RefCell<Shell>>>=self.top.clone();
+        loop{
+            match temp.clone().as_ref(){
+                Some(s)=>{
+                    if std::rc::Rc::ptr_eq(&s.borrow().data,&n){
+                        break;
+                    }else{
+                        temp=s.borrow().next.clone();
+                    }
+                },None=>{break;}
+            }
+        }return temp;
+    }
+}
+pub struct Tree;impl Tree{
     pub fn new()->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
         return std::rc::Rc::new(None);
     }pub fn in_order_traversal(root:std::rc::Rc<Option<std::cell::RefCell<Node>>>,)->Vec<i32>{
@@ -1240,7 +1285,7 @@ pub struct Shell{
         let mut prev:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
         let mut temp:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
         let mut current:std::rc::Rc<Option<std::cell::RefCell<Node>>>=root.clone();
-        loop{
+        loop{// root=LinkedList head [pre order traversal];
             match current.clone().as_ref(){
                 Some(n)=>{
                     if match n.borrow().prev.as_ref()
@@ -1268,6 +1313,107 @@ pub struct Shell{
                     }else{current=n.borrow().next.clone();}
                 },None=>{break;}
             }
+        }
+    }pub fn flatten_binary_search_tree(
+        root:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        match root.as_ref(){
+            Some(_)=>{// variables initialized
+                let head:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
+                let mut temp:std::rc::Rc<Option<std::cell::RefCell<Node>>>=root.clone();
+                let mut current:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
+                let mut collection:Stack=Stack::new();
+                loop{// find head
+                    match temp.clone().as_ref(){
+                        Some(n)=>{
+                            match n.borrow().prev.as_ref(){
+                                Some(_)=>{
+                                    temp=n.borrow().prev.clone();
+                                },None=>{
+                                    head=temp.clone();
+                                    break;
+                                }
+                            }
+                        },None=>{panic!("unexpected None");}
+                    }
+                }current=root;
+                loop{// flattening list
+                    match current.clone().as_ref(){
+                        Some(n)=>{
+                            match collection.find(current.clone()).as_ref(){
+                                Some(s)=>{
+                                    if s.borrow().value==0{
+                                        s.borrow_mut().value=1;
+                                        current=n.borrow().next.clone();
+                                    }else if s.borrow().value==1{
+                                        collection.pop();
+                                        match current.as_ref(){
+                                            Some(o)=>{
+                                                o.borrow_mut().parent=std::rc::Rc::new(None);
+                                                o.borrow_mut().height=0;
+                                                temp=o.borrow().next.clone();
+                                                loop{
+                                                    match temp.clone().as_ref(){
+                                                        Some(d)=>{
+                                                            match d.borrow().prev.as_ref(){
+                                                                Some(_)=>{
+                                                                    temp=d.borrow().prev.clone();
+                                                                },None=>{break;}
+                                                            }
+                                                        },None=>{break;}
+                                                    }
+                                                }match temp.as_ref(){
+                                                    Some(d)=>{
+                                                        d.borrow_mut().prev=current.clone();
+                                                        o.borrow_mut().next=temp.clone();
+                                                    },None=>{}
+                                                }
+                                            },None=>{panic!("unexpected None");}
+                                        }match current.as_ref(){
+                                            Some(o)=>{
+                                                temp=o.borrow().prev.clone();
+                                                loop{
+                                                    match temp.clone().as_ref(){
+                                                        Some(d)=>{
+                                                            match d.borrow().next.as_ref(){
+                                                                Some(_)=>{
+                                                                    temp=d.borrow().next.clone();
+                                                                },None=>{break;}
+                                                            }
+                                                        },None=>{break;}
+                                                    }
+                                                }match temp.as_ref(){
+                                                    Some(d)=>{
+                                                        d.borrow_mut().next=current.clone();
+                                                        o.borrow_mut().prev=temp.clone();
+                                                    },None=>{}
+                                                }
+                                            },None=>{panic!("unexpected None");}
+                                        }match collection.top.as_ref(){
+                                            Some(h)=>{
+                                                current=h.borrow().data.clone();
+                                            },None=>{
+                                                return head;
+                                            }
+                                        }
+                                    }
+                                },None=>{
+                                    collection.push(current.clone(),0);
+                                    current=n.borrow().prev.clone();
+                                }
+                            }
+                        },None=>{
+                            match collection.top.as_ref(){
+                                Some(s)=>{
+                                    current=s.borrow().data.clone();
+                                },None=>{
+                                    return head;
+                                }
+                            }
+                        }
+                    }
+                }
+            },None=>{return root;}
         }
     }
 }impl Tree{// Debug implementation
@@ -1307,6 +1453,60 @@ pub struct Shell{
                     }
                 );Tree::info(n.borrow().next.clone());
             },None=>{println!("[None]");}
+        }
+    }pub fn list_checker(head:std::rc::Rc<Option<std::cell::RefCell<Node>>>)->bool{
+        let tail:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
+        let mut temp:std::rc::Rc<Option<std::cell::RefCell<Node>>>=head.clone();
+        print!("[ ");
+        loop{
+            match temp.clone().as_ref(){
+                Some(n)=>{
+                    print!("{:#?} ",n.borrow().value);
+                    match n.borrow().next.as_ref(){
+                        Some(_)=>{
+                            temp=n.borrow().next.clone();
+                        },None=>{break;}
+                    }
+                },None=>{
+                    println!("empty list");
+                    return false;
+                }
+            }
+        }print!("]\n[ ");
+        tail=temp.clone();
+        loop{
+            match temp.clone().as_ref(){
+                Some(n)=>{
+                    print!("{:#?} ",n.borrow().value);
+                    match n.borrow().prev.as_ref(){
+                        Some(_)=>{
+                            temp=n.borrow().prev.clone();
+                        },None=>{break;}
+                    }
+                },None=>{
+                    println!("empty list");
+                    return false;
+                }
+            }
+        }print!("]\n");
+        println!(
+            "head={},tail={}",
+            match head.as_ref(){
+                Some(n)=>{
+                    n.borrow().value
+                },None=>{-1}
+            },match tail.as_ref(){
+                Some(n)=>{
+                    n.borrow().value
+                },None=>{-1}
+            }
+        );
+        if std::rc::Rc::ptr_eq(&head,&temp){
+            println!("list");
+            return true;
+        }else{
+            println!("not list");
+            return false;
         }
     }
 }
