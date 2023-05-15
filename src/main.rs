@@ -8,9 +8,7 @@ fn main(){
     a=Tree::insert(a.clone(),4);
     a=Tree::insert(a.clone(),5);
     a=Tree::insert(a.clone(),6);
-    Tree::show(a.clone());
-    a=Tree::flatten_binary_search_tree_in_place(a.clone());
     // Tree::show(a.clone());
-    Tree::list_checker(a.clone());
+    Tree::show(Tree::bst_lca(a.clone(),6,2));
     return;
 }

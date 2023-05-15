@@ -1103,16 +1103,15 @@ pub struct Tree;impl Tree{
         a:std::rc::Rc<Option<std::cell::RefCell<Node>>>,
         b:std::rc::Rc<Option<std::cell::RefCell<Node>>>
     )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
-        let mut temp_a:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
-        temp_a=std::rc::Rc::new(None);
-        let mut temp_b:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
-        temp_b=std::rc::Rc::new(None);
+        let mut temp_a:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+        =std::rc::Rc::new(None);
+        let mut temp_b:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+        =std::rc::Rc::new(None);
         if std::rc::Rc::ptr_eq(&root,&a){
             temp_a=root.clone();
         }if std::rc::Rc::ptr_eq(&root,&b){
             temp_b=root.clone();
-        }
-        match root.as_ref(){
+        }match root.as_ref(){
             Some(n)=>{
                 if match temp_a.clone().as_ref(){
                     Some(_)=>{false},None=>{true}
@@ -1139,9 +1138,10 @@ pub struct Tree;impl Tree{
                         return std::rc::Rc::new(None);
                     }
                 }
-            },None=>{}
+            },None=>{
+                return root;
+            }
         }
-        return std::rc::Rc::new(None);
     }pub fn kth_ancestor(
         root:std::rc::Rc<Option<std::cell::RefCell<Node>>>,
         target:std::rc::Rc<Option<std::cell::RefCell<Node>>>,
@@ -1466,6 +1466,19 @@ pub struct Tree;impl Tree{
                     }
                 },None=>{return previous;}
             }
+        }
+    }pub fn bst_lca(
+        root:std::rc::Rc<Option<std::cell::RefCell<Node>>>,
+        a:i32,b:i32
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        match root.as_ref(){
+            Some(n)=>{
+                if n.borrow().value<a&&b>n.borrow().value{
+                    return Tree::bst_lca(n.borrow().next.clone(),a,b);
+                }else if n.borrow().value>a&&b<n.borrow().value{
+                    return Tree::bst_lca(n.borrow().prev.clone(),a,b);
+                }else{return root;}
+            },None=>{return root;}
         }
     }
 }impl Tree{// Debug implementation
