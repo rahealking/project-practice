@@ -1415,6 +1415,58 @@ pub struct Tree;impl Tree{
                 }
             },None=>{return root;}
         }
+    }pub fn flatten_binary_search_tree_in_place(
+        root:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        let mut current:std::rc::Rc<Option<std::cell::RefCell<Node>>>=root.clone();
+        let mut previous:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+        =std::rc::Rc::new(None);
+        let mut temp:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
+        loop{
+            match current.clone().as_ref(){
+                Some(n)=>{
+                    if match n.borrow().next.as_ref()
+                    {Some(_)=>{true},None=>{false}}{
+                        temp=n.borrow().next.clone();
+                        loop{
+                            match temp.clone().as_ref(){
+                                Some(o)=>{
+                                    match o.borrow().prev.as_ref(){
+                                        Some(_)=>{
+                                            if !std::rc::Rc::ptr_eq
+                                            (&current,&o.borrow().prev)
+                                            {temp=o.borrow().prev.clone();}
+                                            else{break;}
+                                        },None=>{break;}
+                                    }
+                                },None=>{panic!("unexpected None");}
+                            }
+                        }match temp.as_ref(){
+                            Some(o)=>{
+                                if !std::rc::Rc::ptr_eq
+                                (&current,&o.borrow().prev){
+                                    o.borrow_mut().prev=current.clone();
+                                    current=n.borrow().next.clone();
+                                }else{
+                                    o.borrow_mut().prev=current.clone();
+                                    n.borrow_mut().next=temp.clone();
+                                    previous=current.clone();
+                                    current=n.borrow().prev.clone();
+                                }
+                            },None=>{panic!("unexpected None");}
+                        }
+                    }else{
+                        match previous.as_ref(){
+                            Some(o)=>{
+                                n.borrow_mut().next=previous.clone();
+                                o.borrow_mut().prev=current.clone();
+                            },None=>{}
+                        }previous=current.clone();
+                        current=n.borrow().prev.clone();
+                    }
+                },None=>{return previous;}
+            }
+        }
     }
 }impl Tree{// Debug implementation
     pub fn parent_check(root:std::rc::Rc<Option<std::cell::RefCell<Node>>>){

@@ -1,5 +1,4 @@
 *.class
-*.exe
 *.json
 .devcontainer
 # Added by cargo
