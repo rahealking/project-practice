@@ -1480,6 +1480,43 @@ pub struct Tree;impl Tree{
                 }else{return root;}
             },None=>{return root;}
         }
+    }pub fn balanced_bst_constructor(
+        arr:&[i32]
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        if arr.len()>0{
+            if arr.len()>1{
+                let mut i:usize=0;let mut j:usize=arr.len()-1;
+                loop{if i<j{i+=1;j-=1;}else{break;}}
+                let root:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Node::new(arr[j]);
+                match root.as_ref(){
+                    Some(n)=>{
+                        n.borrow_mut().prev=Tree::balanced_bst_constructor(&arr[..j]);
+                        n.borrow_mut().next=Tree::balanced_bst_constructor(&arr[j+1..]);
+                        return root;
+                    },None=>{panic!("unexpected None");}
+                }
+            }else{return Node::new(arr[0]);}
+        }else{return std::rc::Rc::new(None);}
+    }pub fn bst_constructor_from_pre_order(arr:&[i32])
+    ->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        if arr.len()>0{
+            if arr.len()>1{
+                let mut i:usize=0;
+                let root:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Node::new(arr[0]);
+                match root.as_ref(){
+                    Some(n)=>{
+                        loop{
+                            if i<arr.len(){
+                                if arr[i]>arr[0]
+                                {break;}else{i+=1;}
+                            }else{break;}
+                        }n.borrow_mut().prev=Tree::bst_constructor_from_pre_order(&arr[1..i]);
+                        n.borrow_mut().next=Tree::bst_constructor_from_pre_order(&arr[i..]);
+                        return root;
+                    },None=>{panic!("unexpected None");}
+                }
+            }else{return Node::new(arr[0]);}
+        }else{return std::rc::Rc::new(None);}
     }
 }impl Tree{// Debug implementation
     pub fn parent_check(root:std::rc::Rc<Option<std::cell::RefCell<Node>>>){

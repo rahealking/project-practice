@@ -8,7 +8,6 @@ fn main(){
     a=Tree::insert(a.clone(),4);
     a=Tree::insert(a.clone(),5);
     a=Tree::insert(a.clone(),6);
-    // Tree::show(a.clone());
-    Tree::show(Tree::bst_lca(a.clone(),6,2));
+    println!("{:#?}",Tree::bst_constructor_from_pre_order(&[3,1,0,2,5,4,6]));
     return;
 }

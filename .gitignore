@@ -1,5 +1,3 @@
-*.class
-*.json
 .devcontainer
 # Added by cargo
 /target
