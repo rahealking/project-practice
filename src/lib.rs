@@ -39,6 +39,73 @@ pub struct Node{
                 Node::print(o.borrow().next.clone());
             },None=>{return;}
         }
+    }pub fn mid(
+        head:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        match head.as_ref(){
+            Some(_)=>{
+                let mut slow:std::rc::Rc<Option<std::cell::RefCell<Node>>>=head.clone();
+                let mut fast:std::rc::Rc<Option<std::cell::RefCell<Node>>>=slow.clone();
+                loop{
+                    match slow.clone().as_ref(){
+                        Some(n)=>{
+                            match n.borrow().next.as_ref(){
+                                Some(_)=>{
+                                    slow=n.borrow().next.clone();
+                                },None=>{break;}
+                            }
+                        },None=>{panic!("unexpected None");}
+                    }match fast.clone().as_ref(){
+                        Some(n)=>{
+                            match n.borrow().next.as_ref(){
+                                Some(_)=>{
+                                    fast=n.borrow().next.clone();
+                                },None=>{break;}
+                            }
+                        },None=>{panic!("unexpected None");}
+                    }match fast.clone().as_ref(){
+                        Some(n)=>{
+                            match n.borrow().next.as_ref(){
+                                Some(_)=>{
+                                    fast=n.borrow().next.clone();
+                                },None=>{break;}
+                            }
+                        },None=>{panic!("unexpected None");}
+                    }
+                }println!("finished list_mid");
+                return slow;
+            },None=>{return head;}
+        }
+    }pub fn head(
+        tail:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        match tail.as_ref(){
+            Some(_)=>{
+                let mut head:std::rc::Rc<Option<std::cell::RefCell<Node>>>=tail.clone();
+                loop{
+                    match head.clone().as_ref(){
+                        Some(n)=>{
+                            match n.borrow().prev.as_ref(){
+                                Some(_)=>{
+                                    head=n.borrow().prev.clone();
+                                },None=>{break;}
+                            }
+                        },None=>{panic!("unexpected None");}
+                    }
+                }return head;
+            },None=>{return tail;}
+        }
+    }pub fn collect(
+        head:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    )->Vec<i32>{
+        match head.as_ref(){
+            Some(n)=>{
+                let mut v:Vec<i32>=Vec::new();
+                v.push(n.borrow().value);
+                v.extend(Node::collect(n.borrow().next.clone()).iter());
+                return v;
+            },None=>{return Vec::new();}
+        }
     }
 }
 #[derive(Debug)]
@@ -199,8 +266,11 @@ pub struct Shell{
             }
         }return temp;
     }
-}
-pub struct Tree;impl Tree{
+}pub struct Tree_Info{bst:bool,height:i32,min:i32,max:i32}
+impl Tree_Info{
+    pub fn new(bst:bool,height:i32,min:i32,max:i32)
+    ->Tree_Info{return Tree_Info{bst,height,min,max}}
+}pub struct Tree;impl Tree{
     pub fn new()->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
         return std::rc::Rc::new(None);
     }pub fn in_order_traversal(root:std::rc::Rc<Option<std::cell::RefCell<Node>>>,)->Vec<i32>{
@@ -1517,6 +1587,63 @@ pub struct Tree;impl Tree{
                 }
             }else{return Node::new(arr[0]);}
         }else{return std::rc::Rc::new(None);}
+    }pub fn merge_to_list(
+        mut a:std::rc::Rc<Option<std::cell::RefCell<Node>>>,
+        mut b:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        let mut previous:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Tree::new();
+        match a.clone().as_ref(){
+            Some(n)=>{
+                match b.clone().as_ref(){
+                    Some(o)=>{
+                        if n.borrow().value>o.borrow().value{
+                            previous=a.clone();
+                            a=b.clone();
+                            b=previous.clone();
+                            n.borrow_mut().prev=Tree::new();
+                            o.borrow_mut().prev=Tree::new();
+                        }
+                    },None=>{return a;}
+                }
+            },None=>{return b;}
+        }let head:std::rc::Rc<Option<std::cell::RefCell<Node>>>=a.clone();loop{
+            match a.clone().as_ref(){
+                Some(n)=>{
+                    match b.clone().as_ref(){
+                        Some(o)=>{
+                            if n.borrow().value>o.borrow().value{
+                                match previous.clone().as_ref(){
+                                    Some(d)=>{
+                                        d.borrow_mut().next=b.clone();
+                                        n.borrow_mut().prev=b.clone();
+                                        b=o.borrow().next.clone();
+                                        o.borrow_mut().prev=previous.clone();
+                                        o.borrow_mut().next=a.clone();
+                                        previous=d.borrow().next.clone();
+                                    },None=>{panic!("unexpected None");}
+                                }
+                            }else{
+                                previous=a.clone();
+                                a=n.borrow().next.clone();
+                            }
+                        },None=>{break;}
+                    }
+                },None=>{break;}
+            }
+        }if match b.as_ref(){Some(_)=>{true},None=>{false}}{
+            match previous.as_ref(){
+                Some(n)=>{
+                    n.borrow_mut().next=b.clone();
+                },None=>{panic!("unexpected None");}
+            }
+        }return head;
+    }pub fn merge_two_bst(
+        mut a:std::rc::Rc<Option<std::cell::RefCell<Node>>>,
+        mut b:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        a=Tree::flatten_binary_search_tree_in_place(a.clone());
+        b=Tree::flatten_binary_search_tree_in_place(b.clone());
+        return Tree::balanced_bst_constructor(Node::collect(Tree::merge_to_list(a,b)).as_slice());
     }
 }impl Tree{// Debug implementation
     pub fn parent_check(root:std::rc::Rc<Option<std::cell::RefCell<Node>>>){
