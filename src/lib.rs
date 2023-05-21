@@ -266,10 +266,11 @@ pub struct Shell{
             }
         }return temp;
     }
-}pub struct Tree_Info{bst:bool,height:i32,min:i32,max:i32}
-impl Tree_Info{
+}
+pub struct TreeInfo{pub bst:bool,pub height:i32,pub min:i32,pub max:i32}
+impl TreeInfo{
     pub fn new(bst:bool,height:i32,min:i32,max:i32)
-    ->Tree_Info{return Tree_Info{bst,height,min,max}}
+    ->TreeInfo{return TreeInfo{bst,height,min,max}}
 }pub struct Tree;impl Tree{
     pub fn new()->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
         return std::rc::Rc::new(None);
@@ -1644,6 +1645,53 @@ impl Tree_Info{
         a=Tree::flatten_binary_search_tree_in_place(a.clone());
         b=Tree::flatten_binary_search_tree_in_place(b.clone());
         return Tree::balanced_bst_constructor(Node::collect(Tree::merge_to_list(a,b)).as_slice());
+    }pub fn tallest_bst_height(
+        root:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    )->Option<TreeInfo>{
+        match root.as_ref(){
+            Some(n)=>{
+                let left:Option<TreeInfo>=Tree::tallest_bst_height(n.borrow().prev.clone());
+                let right:Option<TreeInfo>=Tree::tallest_bst_height(n.borrow().next.clone());
+                let mut info:Option<TreeInfo>=Some(TreeInfo::new(
+                    true,0,n.borrow().value,n.borrow().value
+                ));match &mut info{
+                    Some(i)=>{
+                        if match &left{Some(ti)=>{ti.bst},None=>{true}}
+                        &&match &right{Some(ti)=>{ti.bst},None=>{true}}
+                        {}else{i.bst=false;}match &left{
+                            Some(ti)=>{
+                                if n.borrow().value>ti.max{
+                                    i.min=ti.min;
+                                }else{i.bst=false;}
+                            },None=>{}
+                        }match &right{
+                            Some(ti)=>{
+                                if ti.min>n.borrow().value{
+                                    i.max=ti.max;
+                                }else{i.bst=false;}
+                            },None=>{}
+                        }if i.bst{
+                            i.height=max(
+                                match &left{Some(ti)=>{ti.height},None=>{-1}},
+                                match &right{Some(ti)=>{ti.height},None=>{-1}}
+                            )+1;return info;
+                        }else{
+                            match &left{
+                                Some(l)=>{
+                                    match &right{
+                                        Some(r)=>{
+                                            if l.height>r.height{
+                                                return left;
+                                            }else{return right;}
+                                        },None=>{return left;}
+                                    }
+                                },None=>{return right;}
+                            }
+                        }
+                    },None=>{panic!("unexpected None");}
+                }
+            },None=>{return None;}
+        }
     }
 }impl Tree{// Debug implementation
     pub fn parent_check(root:std::rc::Rc<Option<std::cell::RefCell<Node>>>){
@@ -1736,6 +1784,57 @@ impl Tree_Info{
         }else{
             println!("not list");
             return false;
+        }
+    }
+}// --heap--;
+pub mod arr_impl{
+    use super::max;
+    #[derive(Debug)]
+    pub struct Heap{
+        pub tree:[i32;8],pub end:usize
+    }impl Heap{
+        pub fn new()->Heap{return Heap{tree:[-1;8],end:0}}
+        pub fn insert(&mut self,value:i32)->bool{
+            if self.end<self.tree.len()-1{
+                self.end+=1;
+                let mut i:usize=self.end;
+                let mut temp:i32;
+                self.tree[self.end]=value;
+                loop{
+                    if i>1{
+                        if self.tree[i]>self.tree[i/2]{
+                            temp=self.tree[i/2];
+                            self.tree[i/2]=self.tree[i];
+                            self.tree[i]=temp;i=i/2;
+                        }else{break;}
+                    }else{break;}
+                }return true;
+            }else{return false;}
+        }pub fn pop(&mut self)->Option<i32>{
+            if self.end>0{
+                let mut i:usize=1;
+                let mut temp:i32;
+                let value:i32=self.tree[1];
+                self.tree[1]=self.tree[self.end];
+                self.tree[self.end]=-1;
+                self.end-=1;loop{
+                    if i<self.end{
+                        if max(self.tree[i*2],self.tree[i*2+1])==self.tree[i*2+1]{
+                            if self.tree[i*2+1]>self.tree[i]{
+                                temp=self.tree[i*2+1];
+                                self.tree[i*2+1]=self.tree[i];
+                                self.tree[i]=temp;i=i*2+1;
+                            }else{break;}
+                        }else{
+                            if self.tree[i*2]>self.tree[i]{
+                                temp=self.tree[i*2];
+                                self.tree[i*2]=self.tree[i];
+                                self.tree[i]=temp;i=i*2;
+                            }else{break;}
+                        }
+                    }else{break;}
+                }return Some(value);
+            }else{return None;}
         }
     }
 }
