@@ -1,5 +1,15 @@
 pub use std;
 pub fn max(a:i32,b:i32)->i32{return if a>b{a}else{b};}
+pub fn intput()->i32{
+    let mut word:String=String::new();
+    println!("[intput]");
+    match std::io::stdin().read_line(&mut word){
+        Ok(_)=>{
+            word.pop();word.pop();
+            return word.parse().unwrap();
+        },Err(e)=>{panic!("{}",e);}
+    }
+}
 #[derive(Debug)]
 pub struct Node{
     pub height:i32,pub value:i32,
@@ -1791,10 +1801,13 @@ pub mod arr_impl{
     use super::max;
     #[derive(Debug)]
     pub struct Heap{
-        pub tree:[i32;8],pub end:usize
+        pub tree:Vec<i32>,pub end:usize
     }impl Heap{
-        pub fn new()->Heap{return Heap{tree:[-1;8],end:0}}
-        pub fn insert(&mut self,value:i32)->bool{
+        pub fn new(size:usize)->Heap{
+            return Heap{
+                tree:vec![0;size],end:size
+            };
+        }pub fn insert(&mut self,value:i32)->bool{
             if self.end<self.tree.len()-1{
                 self.end+=1;
                 let mut i:usize=self.end;
@@ -1806,7 +1819,7 @@ pub mod arr_impl{
                             temp=self.tree[i/2];
                             self.tree[i/2]=self.tree[i];
                             self.tree[i]=temp;i=i/2;
-                        }else{break;}
+                        }else{i=i/2;}
                     }else{break;}
                 }return true;
             }else{return false;}
@@ -1818,7 +1831,7 @@ pub mod arr_impl{
                 self.tree[1]=self.tree[self.end];
                 self.tree[self.end]=-1;
                 self.end-=1;loop{
-                    if i<self.end{
+                    if i<self.end/2+1{
                         if max(self.tree[i*2],self.tree[i*2+1])==self.tree[i*2+1]{
                             if self.tree[i*2+1]>self.tree[i]{
                                 temp=self.tree[i*2+1];
@@ -1835,6 +1848,63 @@ pub mod arr_impl{
                     }else{break;}
                 }return Some(value);
             }else{return None;}
+        }pub fn heapify(&mut self){
+            if self.end>1{
+                let mut i:usize=self.end/2;
+                let mut j:usize;// [_!];
+                let mut temp:i32;loop{
+                    if i>0{
+                        if max(self.tree[i*2],self.tree[i*2+1])==self.tree[i*2+1]{
+                            if self.tree[i*2+1]>self.tree[i]{
+                                temp=self.tree[i*2+1];
+                                self.tree[i*2+1]=self.tree[i];
+                                self.tree[i]=temp;j=i;i=i*2+1;
+                                loop{
+                                    if i<self.end/2+1{
+                                        if max(self.tree[i*2],self.tree[i*2+1])==self.tree[i*2+1]{
+                                            if self.tree[i*2+1]>self.tree[i]{
+                                                temp=self.tree[i*2+1];
+                                                self.tree[i*2+1]=self.tree[i];
+                                                self.tree[i]=temp;i=i*2+1;
+                                            }else{break;}
+                                        }else{
+                                            if self.tree[i*2]>self.tree[i]{
+                                                temp=self.tree[i*2];
+                                                self.tree[i*2]=self.tree[i];
+                                                self.tree[i]=temp;i=i*2;
+                                            }else{break;}
+                                        }
+                                    }else{break;}
+                                }i=j;
+                            }else{}
+                        }else{
+                            if self.tree[i*2]>self.tree[i]{
+                                temp=self.tree[i*2];
+                                self.tree[i*2]=self.tree[i];
+                                self.tree[i]=temp;j=i;i=i*2;
+                                loop{
+                                    if i<self.end/2+1{
+                                        if max(self.tree[i*2],self.tree[i*2+1])==self.tree[i*2+1]{
+                                            if self.tree[i*2+1]>self.tree[i]{
+                                                temp=self.tree[i*2+1];
+                                                self.tree[i*2+1]=self.tree[i];
+                                                self.tree[i]=temp;i=i*2+1;
+                                            }else{break;}
+                                        }else{
+                                            if self.tree[i*2]>self.tree[i]{
+                                                temp=self.tree[i*2];
+                                                self.tree[i*2]=self.tree[i];
+                                                self.tree[i]=temp;i=i*2;
+                                            }else{break;}
+                                        }
+                                    }else{break;}
+                                }i=j;
+                            }else{}
+                        }i-=1;
+                    }else{break;}
+                }println!("arr:{:?}",self.tree);
+                return;
+            }else{return;}
         }
     }
 }
