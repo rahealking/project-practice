@@ -1805,7 +1805,7 @@ pub mod arr_impl{
     }impl Heap{
         pub fn new(size:usize)->Heap{
             return Heap{
-                tree:vec![0;size],end:size
+                tree:vec![0;size+1],end:0
             };
         }pub fn insert(&mut self,value:i32)->bool{
             if self.end<self.tree.len()-1{
@@ -1905,6 +1905,23 @@ pub mod arr_impl{
                 }println!("arr:{:?}",self.tree);
                 return;
             }else{return;}
+        }pub fn kth_min_int(arr:&[i32],k:usize)->i32{
+            if !k>arr.len(){
+                let mut collection:Heap=Heap::new(k);
+                let mut i:usize=0;loop{
+                    if i<k{
+                        collection.insert(arr[i]);
+                        i+=1;
+                    }else{break;}
+                }loop{
+                    if i<arr.len(){
+                        if arr[i]<collection.tree[1]{
+                            collection.pop();
+                            collection.insert(arr[i]);
+                        }i+=1;
+                    }else{break;}
+                }return collection.tree[1];
+            }else{panic!("array index out of bound");}
         }
     }
 }

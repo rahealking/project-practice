@@ -1,13 +1,6 @@
 use project_practice::{arr_impl::*,*};
 fn main(){
-    let mut hep:Heap=Heap::new(8);
-    hep.insert(5);
-    hep.insert(4);
-    hep.insert(3);
-    hep.insert(6);
-    hep.end=7;hep.tree=vec![0,2,4,9,7,3,6,5];
-    hep.heapify();
-    // println!("{:?}",hep.pop());
-    println!("{:?}",hep);
+    let arr:[i32;13]=[1,6,4,8,7,3,11,31,55,22,21,23,14];
+    println!("{}",Heap::kth_min_int(&arr,3));
     return;
 }
