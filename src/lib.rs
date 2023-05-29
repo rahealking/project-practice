@@ -316,16 +316,8 @@ impl TreeInfo{
         match root.as_ref(){
             Some(n)=>{
                 return max(
-                    match n.borrow().prev.as_ref(){
-                        Some(o)=>{
-                            o.borrow().height
-                        },None=>{-1}
-                    },
-                    match n.borrow().next.as_ref(){
-                        Some(o)=>{
-                            o.borrow().height
-                        },None=>{-1}
-                    }
+                    Tree::height(n.borrow().prev.clone()),
+                    Tree::height(n.borrow().next.clone())
                 )+1;
             },None=>{return -1;}
         }
@@ -1922,6 +1914,138 @@ pub mod arr_impl{
                     }else{break;}
                 }return collection.tree[1];
             }else{panic!("array index out of bound");}
+        }
+    }
+}// mod_arr_impl;
+#[derive(Debug)]
+pub struct Heap;
+impl Heap{
+    pub fn heapify(root:std::rc::Rc<Option<std::cell::RefCell<Node>>>){
+        match root.as_ref(){
+            Some(n)=>{
+                let temp:i32;
+                Heap::heapify(n.borrow().prev.clone());
+                Heap::heapify(n.borrow().next.clone());
+                let left:std::rc::Rc<Option<std::cell::RefCell<Node>>>=n.borrow().prev.clone();
+                let right:std::rc::Rc<Option<std::cell::RefCell<Node>>>=n.borrow().next.clone();
+                match left.as_ref(){
+                    Some(o)=>{
+                        match right.as_ref(){
+                            Some(d)=>{
+                                if max(o.borrow().value,d.borrow().value)==o.borrow().value{
+                                    if o.borrow().value>n.borrow().value{
+                                        temp=n.borrow().value;
+                                        n.borrow_mut().value=o.borrow().value;
+                                        o.borrow_mut().value=temp;
+                                    }else{return;}
+                                }else{
+                                    if d.borrow().value>n.borrow().value{
+                                        temp=n.borrow().value;
+                                        n.borrow_mut().value=d.borrow().value;
+                                        d.borrow_mut().value=temp;
+                                    }else{return;}
+                                }
+                            },None=>{
+                                if o.borrow().value>n.borrow().value{
+                                    temp=n.borrow().value;
+                                    n.borrow_mut().value=o.borrow().value;
+                                    o.borrow_mut().value=temp;
+                                }else{return;}
+                            }
+                        }
+                    },None=>{
+                        match right.as_ref(){
+                            Some(o)=>{
+                                if o.borrow().value>n.borrow().value{
+                                    temp=n.borrow().value;
+                                    n.borrow_mut().value=o.borrow().value;
+                                    o.borrow_mut().value=temp;
+                                }else{return;}
+                            },None=>{return;}
+                        }
+                    }
+                }
+            },None=>{return;}
+        }
+    }pub fn insert(
+        root:std::rc::Rc<Option<std::cell::RefCell<Node>>>,value:i32
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        let mut collection:Queue=Queue::new();
+        collection.enqueue(0,root.clone());
+        loop{
+            match collection.dequeue().as_ref(){
+                Some(s)=>{
+                    match s.borrow().data.as_ref(){
+                        Some(n)=>{
+                            if match n.borrow().prev.clone().as_ref()
+                            {Some(_)=>{true},None=>{false}}{
+                                if match n.borrow().next.as_ref(){Some(_)=>{true},None=>{false}}{
+                                    collection.enqueue(0,n.borrow().prev.clone());
+                                    collection.enqueue(0,n.borrow().next.clone());
+                                }else{
+                                    n.borrow_mut().next=Node::new(value);
+                                    break;
+                                }
+                            }else{
+                                n.borrow_mut().prev=Node::new(value);
+                                break;
+                            }
+                        },None=>{return Node::new(value);}
+                    }
+                },None=>{panic!("unexpected None");}
+            }
+        }Heap::heapify(root.clone());
+        return root;
+    }pub fn pop(
+        root:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        match root.as_ref(){
+            Some(n)=>{
+                let temp:i32;
+                let mut collection:Queue=Queue::new();
+                let mut previous:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Tree::new();
+                collection.enqueue(0,root.clone());
+                loop{
+                    match collection.dequeue().as_ref(){
+                        Some(s)=>{
+                            match s.borrow().data.as_ref(){
+                                Some(o)=>{
+                                    if match o.borrow().prev.as_ref()
+                                    {Some(_)=>{true},None=>{false}}{
+                                        collection.enqueue(0,o.borrow().prev.clone());
+                                        if match o.borrow().next.as_ref()
+                                        {Some(_)=>{true},None=>{false}}{
+                                            collection.enqueue(0,o.borrow().next.clone());
+                                            previous=s.borrow().data.clone();
+                                        }else{
+                                            match o.borrow().prev.as_ref(){
+                                                Some(d)=>{
+                                                    n.borrow_mut().value=d.borrow().value;
+                                                },None=>{panic!("unexpected None");}
+                                            }o.borrow_mut().prev=Tree::new();
+                                            Heap::heapify(root.clone());
+                                            return root;
+                                        }
+                                    }else{
+                                        match previous.as_ref(){
+                                            Some(d)=>{
+                                                match d.borrow().next.as_ref(){
+                                                    Some(e)=>{
+                                                        temp=e.borrow().value;
+                                                    },None=>{panic!("unexpected None");}
+                                                }n.borrow_mut().value=temp;
+                                                d.borrow_mut().next=Tree::new();
+                                                Heap::heapify(root.clone());
+                                                return root;
+                                            },None=>{return Tree::new();}
+                                        }
+                                    }
+                                },None=>{panic!("unexpected None");}
+                            }
+                        },None=>{panic!("unexpected None");}
+                    }
+                }
+            },None=>{return root;}
         }
     }
 }
