@@ -2047,5 +2047,22 @@ impl Heap{
                 }
             },None=>{return root;}
         }
+    }pub fn is_heap(root:std::rc::Rc<Option<std::cell::RefCell<Node>>>)->bool{
+        match root.as_ref(){
+            Some(n)=>{
+                if Heap::is_heap(n.borrow().prev.clone())
+                &&Heap::is_heap(n.borrow().next.clone()){
+                    match n.borrow().prev.as_ref(){
+                        Some(o)=>{
+                            if o.borrow().value>n.borrow().value{return false;}
+                        },None=>{}
+                    }match n.borrow().next.as_ref(){
+                        Some(o)=>{
+                            if o.borrow().value>n.borrow().value{return false;}
+                        },None=>{}
+                    }return true;
+                }else{return false;}
+            },None=>{return true;}
+        }
     }
 }
