@@ -1,5 +1,5 @@
-[todo]:[linked implementation of Heap (max)];
-[continue]:[video:73];
+[todo]:[];
+# [continue]:[];
 [dues]:{
     function("k_sum_paths"):
     binary tree,

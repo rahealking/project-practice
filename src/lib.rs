@@ -1,14 +1,28 @@
 pub use std;
 pub fn max(a:i32,b:i32)->i32{return if a>b{a}else{b};}
+pub fn min(a:i32,b:i32)->i32{return if a<b{a}else{b};}
 pub fn intput()->i32{
     let mut word:String=String::new();
     println!("[intput]");
     match std::io::stdin().read_line(&mut word){
         Ok(_)=>{
-            word.pop();word.pop();
+            word.pop();
             return word.parse().unwrap();
         },Err(e)=>{panic!("{}",e);}
     }
+}pub fn input()->String{
+    let mut word:String=String::new();
+    match std::io::stdin().read_line(&mut word){
+        Ok(_)=>{
+            word.pop();
+            return word;
+        },Err(e)=>{panic!("{}",e);}
+    }
+}pub fn signum(a:i32,b:i32)->i32{
+    if a==b{return 0;}
+    if a>b{return 1;}
+    if a<b{return -1;}
+    else{panic!("unexpected case");}
 }
 #[derive(Debug)]
 pub struct Node{
@@ -125,8 +139,8 @@ pub struct Shell{
     pub next:std::rc::Rc<Option<std::cell::RefCell<Shell>>>,
     pub value:i32
 }impl Shell{
-    pub fn new(data:i32,
-        value:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    pub fn new(
+        data:i32,value:std::rc::Rc<Option<std::cell::RefCell<Node>>>
     )->std::rc::Rc<Option<std::cell::RefCell<Shell>>>{
         return std::rc::Rc::new(
             Some(
@@ -276,7 +290,8 @@ pub struct Shell{
             }
         }return temp;
     }
-}
+}#[derive(Debug)]
+pub struct Pair(i32,i32);
 pub struct TreeInfo{pub bst:bool,pub height:i32,pub min:i32,pub max:i32}
 impl TreeInfo{
     pub fn new(bst:bool,height:i32,min:i32,max:i32)
@@ -1747,7 +1762,7 @@ impl TreeInfo{
                         },None=>{break;}
                     }
                 },None=>{
-                    println!("empty list");
+                    println!("empty list ]");
                     return false;
                 }
             }
@@ -1763,7 +1778,7 @@ impl TreeInfo{
                         },None=>{break;}
                     }
                 },None=>{
-                    println!("empty list");
+                    println!("empty list ]");
                     return false;
                 }
             }
@@ -2063,6 +2078,308 @@ impl Heap{
                     }return true;
                 }else{return false;}
             },None=>{return true;}
+        }
+    }
+}#[derive(Debug)]
+pub struct MinHeap;impl MinHeap{
+    pub fn heapify(root:std::rc::Rc<Option<std::cell::RefCell<Node>>>){
+        match root.as_ref(){
+            Some(n)=>{
+                let mut temp:i32;
+                let left:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
+                left=n.borrow().prev.clone();
+                let right:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
+                right=n.borrow().next.clone();
+                MinHeap::heapify(n.borrow().prev.clone());
+                MinHeap::heapify(n.borrow().next.clone());
+                match left.as_ref(){
+                    Some(o)=>{
+                        match right.as_ref(){
+                            Some(d)=>{
+                                if min(o.borrow().value,d.borrow().value)==o.borrow().value{
+                                    if o.borrow().value<n.borrow().value{
+                                        temp=o.borrow().value;
+                                        o.borrow_mut().value=n.borrow().value;
+                                        n.borrow_mut().value=temp;
+                                        temp=o.borrow().height;
+                                        o.borrow_mut().height=n.borrow().height;
+                                        n.borrow_mut().height=temp;
+                                        MinHeap::heapify(left);
+                                    }return;
+                                }else{
+                                    if d.borrow().value<n.borrow().value{
+                                        temp=d.borrow().value;
+                                        d.borrow_mut().value=n.borrow().value;
+                                        n.borrow_mut().value=temp;
+                                        temp=d.borrow().height;
+                                        d.borrow_mut().height=n.borrow().height;
+                                        n.borrow_mut().height=temp;
+                                        MinHeap::heapify(right);
+                                    }return;
+                                }
+                            },None=>{
+                                if o.borrow().value<n.borrow().value{
+                                    temp=o.borrow().value;
+                                    o.borrow_mut().value=n.borrow().value;
+                                    n.borrow_mut().value=temp;
+                                    temp=o.borrow().height;
+                                    o.borrow_mut().height=n.borrow().height;
+                                    n.borrow_mut().height=temp;
+                                    MinHeap::heapify(left);
+                                }return;
+                            }
+                        }
+                    },None=>{return;}
+                }
+            },None=>{return;}
+        }
+    }pub fn insert(
+        root:std::rc::Rc<Option<std::cell::RefCell<Node>>>,
+        value:i32,index:i32
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        let node:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Node::new(value);
+        let mut collection:Queue=Queue::new();collection.enqueue(0,root.clone());
+        match node.as_ref(){
+            Some(n)=>{
+                n.borrow_mut().height=index;
+            },None=>{panic!("unexpected None");}
+        }loop{
+            match collection.dequeue().as_ref(){
+                Some(s)=>{
+                    match s.borrow().data.clone().as_ref(){
+                        Some(n)=>{
+                            if match n.borrow().prev.as_ref()
+                            {Some(_)=>{true},None=>{false}}{
+                                collection.enqueue(0,n.borrow().prev.clone());
+                            }else{
+                                n.borrow_mut().prev=node.clone();
+                                MinHeap::heapify(root.clone());
+                                return root;
+                            }if match n.borrow().next.as_ref()
+                            {Some(_)=>{true},None=>{false}}{
+                                collection.enqueue(0,n.borrow().next.clone());
+                            }else{
+                                n.borrow_mut().next=node.clone();
+                                MinHeap::heapify(root.clone());
+                                return root;
+                            }
+                        },None=>{return node;}
+                    }
+                },None=>{panic!("unexpected None");}
+            }
+        }
+    }pub fn pop(
+        root:std::rc::Rc<Option<std::cell::RefCell<Node>>>
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        match root.as_ref(){
+            Some(n)=>{
+                let mut collection:Queue=Queue::new();
+                let mut previous:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Tree::new();
+                let temp:i32;let val:i32;collection.enqueue(0,root.clone());
+                let mut left:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
+                let mut right:std::rc::Rc<Option<std::cell::RefCell<Node>>>;
+                loop{
+                    match collection.dequeue().as_ref(){
+                        Some(s)=>{
+                            match s.borrow().data.as_ref(){
+                                Some(o)=>{
+                                    left=o.borrow().prev.clone();
+                                    right=o.borrow().next.clone();
+                                    match left.as_ref(){
+                                        Some(d)=>{
+                                            match right.as_ref(){
+                                                Some(_)=>{
+                                                    collection.enqueue(0,left.clone());
+                                                    collection.enqueue(0,right.clone());
+                                                    previous=s.borrow().data.clone();
+                                                },None=>{
+                                                    n.borrow_mut().value=d.borrow().value;
+                                                    n.borrow_mut().height=d.borrow().height;
+                                                    o.borrow_mut().prev=Tree::new();
+                                                    MinHeap::heapify(root.clone());
+                                                    return root;
+                                                }
+                                            }
+                                        },None=>{
+                                            match previous.as_ref(){
+                                                Some(d)=>{
+                                                    match d.borrow().next.as_ref(){
+                                                        Some(e)=>{
+                                                            temp=e.borrow().value;
+                                                            val=e.borrow().height;
+                                                        },None=>{panic!("unexpected None");}
+                                                    }n.borrow_mut().value=temp;
+                                                    n.borrow_mut().height=val;
+                                                    d.borrow_mut().next=Tree::new();
+                                                    MinHeap::heapify(root.clone());
+                                                    return root;
+                                                },None=>{return Tree::new();}
+                                            }
+                                        }
+                                    }
+                                },None=>{panic!("unexpected None");}
+                            }
+                        },None=>{panic!("unexpected None");}
+                    }
+                }
+            },None=>{return root;}
+        }
+    }pub fn merge_k_sorted_list(
+        mut lists:Vec<std::rc::Rc<Option<std::cell::RefCell<Node>>>>
+    )->std::rc::Rc<Option<std::cell::RefCell<Node>>>{
+        let mut collection:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Tree::new();
+        let mut head:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Tree::new();
+        let mut tail:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Tree::new();
+        let mut i:usize=0;loop{
+            if i<lists.len(){
+                match lists[i].as_ref(){
+                    Some(n)=>{
+                        collection=MinHeap::insert(collection.clone(),n.borrow().value,i as i32);
+                        i+=1;
+                    },None=>{}
+                }
+            }else{break;}
+        }loop{
+            match collection.clone().as_ref(){
+                Some(n)=>{
+                    i=n.borrow().height as usize;
+                    match lists[i].clone().as_ref(){
+                        Some(o)=>{
+                                match tail.clone().as_ref(){
+                                    Some(d)=>{
+                                        d.borrow_mut().next=lists[i].clone();
+                                        o.borrow_mut().prev=tail.clone();
+                                        tail=lists[i].clone();
+                                    },None=>{
+                                        tail=lists[i].clone();
+                                        head=tail.clone();
+                                    }
+                                }lists[i]=o.borrow().next.clone();
+                                collection=MinHeap::pop(collection.clone());
+                            },None=>{panic!("unexpected None");}
+                        }match lists[i].clone().as_ref(){
+                            Some(o)=>{
+                                collection=MinHeap::insert(collection.clone(),o.borrow().value,i as i32);
+                            },None=>{}
+                        }
+                },None=>{break;}
+            }
+        }return head;
+    }pub fn min_range(mut arrays:Vec<std::rc::Rc<Option<std::cell::RefCell<Node>>>>)->i32{
+        let mut collection:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Tree::new();
+        let mut max:i32=match arrays[0].as_ref(){Some(n)=>{n.borrow().value},None=>{return -1;}};
+        let mut i:usize=0;let mut range:i32=-1;loop{    
+            if i<arrays.len(){
+                match arrays[i].as_ref(){
+                    Some(n)=>{
+                        collection=MinHeap::insert(collection.clone(),n.borrow().value,i as i32);
+                        if max<n.borrow().value{max=n.borrow().value;}i+=1;
+                    },None=>{break;}
+                }
+            }else{break;}
+        }println!("max:{}",max);
+        loop{
+            match collection.clone().as_ref(){
+                Some(n)=>{i=n.borrow().height as usize;},None=>{return range;}
+            }match arrays[i].clone().as_ref(){
+                Some(n)=>{
+                    println!("i={}",i);
+                    collection=MinHeap::pop(collection.clone());
+                    println!("max={}",max);
+                    if max-n.borrow().value<range||0>range{
+                        range=max-n.borrow().value;
+                        println!("max={}&&n={}",max,n.borrow().value);
+                    }
+                    println!("n={}",n.borrow().value);
+                    println!("range={}",range);
+                    arrays[i]=n.borrow().next.clone();
+                    match n.borrow().next.clone().as_ref(){
+                        Some(o)=>{
+                            println!("next={}",o.borrow().value);
+                            collection=MinHeap::insert(collection.clone(),o.borrow().value,i as i32);
+                            if o.borrow().value>max{max=o.borrow().value;println!("max>>{}",max);}
+                        },None=>{return range;}
+                    }
+                },None=>{panic!("unexpected None");}
+            }
+        }
+    }pub fn median_in_stream(){
+        let mut arr:Vec<i32>=Vec::new();
+        let mut maxi:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Tree::new();
+        let mut mini:std::rc::Rc<Option<std::cell::RefCell<Node>>>=Tree::new();
+        let mut value:i32;let mut command:String;
+        let mut max_height:i32=0;let mut min_height:i32=0;
+        loop{
+            println!("[command]");
+            command=input();
+            if command=="insert"{
+                value=intput();
+                if value<0{return;}
+                else{arr.push(value);
+                    match maxi.as_ref(){
+                        Some(n)=>{
+                            match mini.as_ref(){
+                                Some(o)=>{
+                                    if value>
+                                    if signum(max_height,min_height)==0{(n.borrow().value+o.borrow().value)/2}
+                                    else if signum(max_height,min_height)==1{n.borrow().value}
+                                    else{o.borrow().value}{
+                                        if signum(max_height,min_height)<0{
+                                            maxi=Heap::insert(maxi.clone(),o.borrow().value);
+                                            mini=MinHeap::pop(mini.clone());
+                                            mini=MinHeap::insert(mini.clone(),value,0);
+                                            max_height+=1;
+                                        }else{
+                                            mini=MinHeap::insert(mini.clone(),value,0);
+                                            min_height+=1;
+                                        }
+                                    }else{
+                                        if signum(max_height,min_height)>0{
+                                            mini=MinHeap::insert(mini.clone(),n.borrow().value,0);
+                                            maxi=Heap::pop(maxi.clone());
+                                            maxi=Heap::insert(maxi.clone(),value);
+                                        }else{
+                                            maxi=Heap::insert(maxi.clone(),value);
+                                            max_height+=1;
+                                        }
+                                    }
+                                },None=>{
+                                    if value>n.borrow().value{
+                                        mini=MinHeap::insert(mini.clone(),value,0);
+                                        min_height+=1;
+                                    }else{
+                                        mini=MinHeap::insert(mini.clone(),n.borrow().value,0);
+                                        maxi=Heap::pop(maxi.clone());
+                                        maxi=Heap::insert(maxi.clone(),value);min_height+=1;
+                                    }
+                                }
+                            }
+                        },None=>{
+                            maxi=Heap::insert(maxi.clone(),value);
+                            max_height+=1;
+                        }
+                    }
+                }
+            }else if command=="median"{
+                println!(
+                    "[{}]",
+                    match maxi.as_ref(){
+                        Some(n)=>{
+                            match mini.as_ref(){
+                                Some(o)=>{
+                                    if signum(max_height,min_height)==0{(n.borrow().value+o.borrow().value)/2}
+                                    else if signum(max_height,min_height)==1{n.borrow().value}
+                                    else{o.borrow().value}
+                                },None=>{n.borrow().value}
+                            }
+                        },None=>{-1}
+                    }
+                );
+            }else if command=="log"{
+                println!("{:?}",arr);
+            }else{
+                println!("unknown command")
+            }
         }
     }
 }
