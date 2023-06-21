@@ -7,6 +7,8 @@ pub fn intput()->i32{
     match std::io::stdin().read_line(&mut word){
         Ok(_)=>{
             word.pop();
+            word=word.replace("\n","");
+            word=word.replace("\r","");
             return word.parse().unwrap();
         },Err(e)=>{panic!("{}",e);}
     }
@@ -290,9 +292,7 @@ pub struct Shell{
             }
         }return temp;
     }
-}#[derive(Debug)]
-pub struct Pair(i32,i32);
-pub struct TreeInfo{pub bst:bool,pub height:i32,pub min:i32,pub max:i32}
+}pub struct TreeInfo{pub bst:bool,pub height:i32,pub min:i32,pub max:i32}
 impl TreeInfo{
     pub fn new(bst:bool,height:i32,min:i32,max:i32)
     ->TreeInfo{return TreeInfo{bst,height,min,max}}
@@ -2380,6 +2380,163 @@ pub struct MinHeap;impl MinHeap{
             }else{
                 println!("unknown command")
             }
+        }
+    }
+}// ---map---
+pub mod map{
+    pub struct Node<T>{
+        pub value:T,
+        pub prev:std::rc::Rc<Option<std::cell::RefCell<Node<T>>>>,
+        pub next:std::rc::Rc<Option<std::cell::RefCell<Node<T>>>>
+    }#[allow(non_camel_case_types)]
+    type node<T>=std::rc::Rc<Option<std::cell::RefCell<Node<T>>>>;
+    impl<T>Node<T>{
+        pub fn blank()->node<T>{return std::rc::Rc::new(None);}
+        pub fn new(value:T)->node<T>{
+            return std::rc::Rc::new(
+                Some(
+                    std::cell::RefCell::new(
+                        Node{value,prev:Node::blank(),next:Node::blank()}
+                    )
+                )
+            );
+        }pub fn push(head:node<T>,value:T)->node<T>{
+            match head.as_ref(){
+                Some(n)=>{
+                    let temp:node<T>=Node::push(n.borrow().next.clone(),value);
+                    n.borrow_mut().next=temp;return head;
+                },None=>{return Node::new(value);}
+            }
+        }pub fn remove(head:node<T>,target:T)->node<T>where T:PartialEq{
+            match head.as_ref(){
+                Some(n)=>{
+                    if n.borrow().value==target{return n.borrow().next.clone();}
+                    else{
+                        let temp:node<T>=Node::remove(n.borrow().next.clone(),target);
+                        n.borrow_mut().next=temp;return head;
+                    }
+                },None=>{return head;}
+            }
+        }
+    }pub struct Pair<K,V>{kye:K,value:V}
+    impl<K,V>Pair<K,V>{pub fn new(k:K,v:V)->Pair<K,V>{return Pair{kye:k,value:v};}}
+    impl<K:std::fmt::Display,V:std::fmt::Display>std::fmt::Display for Pair<K,V>{
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            return std::fmt::write(
+                f,format_args!("kye:{},value:{}",self.kye,self.value)
+            );
+        }
+    }
+    pub trait Hash{
+        fn hashcode(&self)->usize;
+        fn compressor(value:usize,bound:usize)->usize{
+            return if value>bound{((value/bound+bound)/(value%bound))%bound}else{value};
+        }
+    }pub struct HashTable<K:Hash,V>{
+        pub bucket:Vec<node<Pair<K,V>>>
+    }impl<K:Hash,V>HashTable<K,V>{
+        pub fn new()->HashTable<K,V>{return HashTable{bucket:(vec![Node::blank();100])};}
+        pub fn get(&self,kye:K)->Option<V>where K:PartialEq,V:Copy{
+            let hash:usize=<K as Hash>::compressor(kye.hashcode(),self.bucket.len());
+            let mut temp:node<Pair<K,V>>=self.bucket.as_slice()[hash].clone();
+            loop{
+                match temp.clone().as_ref(){
+                    Some(n)=>{
+                        if n.borrow().value.kye==kye{
+                            return Some(n.borrow().value.value);
+                        }else{temp=n.borrow().next.clone();}
+                    },None=>{return None;}
+                }
+            }
+        }pub fn remove(&mut self,kye:K)where K:PartialEq{
+            let hash:usize=<K as Hash>::compressor(kye.hashcode(),self.bucket.len());
+            let arr:&mut[node<Pair<K,V>>]=self.bucket.as_mut_slice();
+            let mut temp:node<Pair<K,V>>=arr[hash].clone();
+            let mut previous:node<Pair<K,V>>=temp.clone();
+            loop{
+                match temp.clone().as_ref(){
+                    Some(n)=>{
+                        if n.borrow().value.kye==kye{
+                            temp=n.borrow().next.clone();
+                            match previous.as_ref(){
+                                Some(o)=>{
+                                    o.borrow_mut().next=temp.clone();
+                                    return;
+                                },None=>{panic!("unexpected None");}
+                            }
+                        }else{
+                            previous=temp.clone();
+                            temp=n.borrow().next.clone();
+                        }
+                    },None=>{return;}
+                }
+            }
+        }pub fn modify(&mut self,kye:K,value:V)where K:PartialEq{
+            let hash:usize=<K as Hash>::compressor(kye.hashcode(),self.bucket.len());
+            let mut temp:node<Pair<K,V>>=self.bucket.as_slice()[hash].clone();
+            loop{
+                match temp.clone().as_ref(){
+                    Some(n)=>{
+                        if n.borrow().value.kye==kye{
+                            n.borrow_mut().value.value=value;
+                            return;
+                        }else{temp=n.borrow().next.clone();}
+                    },None=>{return;}
+                }
+            }
+        }pub fn insert(&mut self,kye:K,value:V)where K:PartialEq+Copy,V:Copy{
+            match self.get(kye){
+                Some(_)=>{
+                    self.modify(kye,value);
+                },None=>{
+                    let hash:usize=<K as Hash>::compressor(kye.hashcode(),self.bucket.len());
+                    let arr:&mut[node<Pair<K,V>>]=self.bucket.as_mut_slice();
+                    arr[hash]=Node::push(arr[hash].clone(),Pair::new(kye,value));
+                }
+            }
+        }pub fn or_insert(&mut self,kye:K,value:V)where K:PartialEq+Copy,V:Copy{
+            match self.get(kye){
+                Some(_)=>{return;},None=>{self.insert(kye,value);return;}
+            }
+        }
+    }impl<K:Hash+std::fmt::Display,V:std::fmt::Display>std::fmt::Display for HashTable<K,V>{
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let mut output=String::new();
+            let mut i:usize=0;let mut temp:node<Pair<K,V>>;
+            let arr:&[node<Pair<K,V>>]=self.bucket.as_slice();
+            output.push_str("[map]");
+            loop{
+                if i<arr.len(){
+                    match arr[i].as_ref(){
+                        Some(n)=>{
+                            output.extend(
+                                format!(
+                                    "\n[{}][({}:{})",
+                                    i,n.borrow().value.kye,n.borrow().value.value
+                                ).chars()
+                            );temp=n.borrow().next.clone();
+                            loop{
+                                match temp.clone().as_ref(){
+                                    Some(o)=>{
+                                        output.extend(
+                                            format!(
+                                                ",({}:{})",
+                                                o.borrow().value.value,o.borrow().value.kye
+                                            ).chars()
+                                        );temp=o.borrow().next.clone();
+                                    },None=>{break;}
+                                }
+                            }output.push(']');
+                        },None=>{}
+                    }i+=1;
+                }else{break;}
+            }
+            return std::fmt::write(f,format_args!("{}",output));
+        }
+    }
+    impl Hash for i32{
+        fn hashcode(&self)->usize {
+            return *self as usize;
         }
     }
 }
