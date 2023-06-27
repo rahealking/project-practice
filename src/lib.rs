@@ -2533,10 +2533,72 @@ pub mod map{
             }
             return std::fmt::write(f,format_args!("{}",output));
         }
-    }
-    impl Hash for i32{
-        fn hashcode(&self)->usize {
-            return *self as usize;
+    }impl Hash for i32{
+        fn hashcode(&self)->usize {return *self as usize;}
+    }#[derive(Debug,Clone)]
+    pub struct Trie{
+        value:char,terminal:bool,pub list:Vec<Option<Trie>>
+    }impl Trie{
+        pub fn new(c:char)->Trie{
+            return Trie{
+                value:c,list:vec![None;26],terminal:false
+            };
+        }pub fn insert(&mut self,data:String){
+            if data.len()>0{
+                let mut temp=self;let mut i:usize;
+                let mut a;
+                for ch in data.chars(){
+                    i=ch as usize-97;
+                    a = &mut temp.list[i];
+                    match a{
+                        Some(t)=>{
+                            temp=t;
+                        },None=>{
+                            *a=Some(Trie::new(ch));
+                            match a{
+                                Some(r)=>{
+                                    temp=r;
+                                },None=>{panic!("unexpected None");}
+                            }
+                        }
+                    }
+                }temp.terminal=true;
+            }
+        }pub fn remove(&mut self,target:String){
+            if target.len()>0{
+                let mut temp:&mut Trie=self;
+                let mut i:usize;
+                for ch in target.chars(){
+                    i=ch as usize-97;
+                    match&mut temp.list[i]{
+                        Some(t)=>{
+                            temp=t;
+                        },None=>{return;}
+                    }
+                }temp.terminal=false;
+            }
+        }pub fn search(&self,target:String)->bool{
+            let mut temp:&Trie=self;let mut i:usize;
+            for ch in target.chars(){
+                i=ch as usize-97;match&temp.list[i]{
+                    Some(t)=>{
+                        temp=t;
+                    },None=>{return false;}
+                }
+            }return temp.terminal;
+        }pub fn words(&self,mut prefix:String)->Vec<String>{
+            let mut i:usize;
+            let mut collection:Vec<String>=Vec::new();
+            if self.terminal{collection.push(prefix.clone());}
+            for i in 0..26{
+                match&self.list[i]{
+                    Some(t)=>{
+                        prefix.push(t.value);
+                        collection.append(&mut t.words(prefix.clone()));
+                        prefix.pop();
+                    },None=>{}
+                }
+            }return collection;
         }
     }
 }

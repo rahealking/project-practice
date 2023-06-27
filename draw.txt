@@ -1,4 +1,4 @@
-[todo]:[vid 87];
+[todo]:[];
 # [continue]:[];
 [dues]:{
     function("k_sum_paths"):
