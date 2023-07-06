@@ -2389,8 +2389,22 @@ pub mod map{
         pub prev:std::rc::Rc<Option<std::cell::RefCell<Node<T>>>>,
         pub next:std::rc::Rc<Option<std::cell::RefCell<Node<T>>>>
     }#[allow(non_camel_case_types)]
-    type node<T>=std::rc::Rc<Option<std::cell::RefCell<Node<T>>>>;
-    impl<T>Node<T>{
+    pub type node<T>=std::rc::Rc<Option<std::cell::RefCell<Node<T>>>>;
+    pub struct ListIter<T>{
+        current:node<T>
+    }impl<T>Iterator for ListIter<T>{
+        type Item=node<T>;
+        fn next(&mut self)->Option<Self::Item>{
+            println!("i");
+            let temp:Self::Item=self.current.clone();
+            match self.current.clone().as_ref(){
+                Some(n)=>{
+                    self.current=n.borrow().next.clone();
+                    return Some(temp);
+                },None=>{return None;}
+            }
+        }
+    }impl<T>Node<T>{
         pub fn blank()->node<T>{return std::rc::Rc::new(None);}
         pub fn new(value:T)->node<T>{
             return std::rc::Rc::new(
@@ -2417,6 +2431,8 @@ pub mod map{
                     }
                 },None=>{return head;}
             }
+        }pub fn iter(n:node<T>)->ListIter<T>{
+            return ListIter{current:n};
         }
     }pub struct Pair<K,V>{kye:K,value:V}
     impl<K,V>Pair<K,V>{pub fn new(k:K,v:V)->Pair<K,V>{return Pair{kye:k,value:v};}}
@@ -2587,7 +2603,6 @@ pub mod map{
                 }
             }return temp.terminal;
         }pub fn words(&self,mut prefix:String)->Vec<String>{
-            let mut i:usize;
             let mut collection:Vec<String>=Vec::new();
             if self.terminal{collection.push(prefix.clone());}
             for i in 0..26{
@@ -2602,3 +2617,158 @@ pub mod map{
         }
     }
 }
+// --backtracing--
+pub mod backtracing{
+    use super::map::node;
+    #[derive(Debug,Clone,Copy)]
+    pub struct Position{y:usize,x:usize,z:usize}
+    impl Position{pub fn new(y:usize,x:usize,z:usize)->Position{return Position{y,x,z};}}
+    pub fn rat_in_maze(
+        maze:node<&[&[u8]]>,map:node<&mut[&mut[u8]]>,// single node (not list);
+        index:Position,mut path:String
+    )->Vec<String>{
+        // [d][l][r][u];
+        //  v << >>  ^ ;
+        match maze.as_ref(){
+            Some(n)=>{
+                match map.as_ref(){
+                    Some(o)=>{
+                        if n.borrow().value.len()==o.borrow().value.len()&&
+                        n.borrow().value[0].len()==o.borrow().value[0].len()
+                        &&n.borrow().value.len()>1&&o.borrow().value[0].len()>1{
+                            let mut ans:Vec<String>=Vec::new();
+                            let mut visited:char='\0';
+                            if!(n.borrow().value.len()-1==index.y&&o.borrow().value[0].len()-1==index.x){
+                                // no path
+                                o.borrow_mut().value[index.y][index.x]=1;// extreme debugging;
+                                if index.y<n.borrow().value.len()-1&&
+                                n.borrow().value[index.y+1][index.x]==1
+                                &&o.borrow().value[index.y+1][index.x]==0{// v/d
+                                    path.push('d');
+                                    ans.append(
+                                        &mut rat_in_maze(
+                                            maze.clone(),
+                                            map.clone(),
+                                            Position::new(index.y+1,index.x,0),
+                                            path.clone()
+                                        )
+                                    );
+                                    path.pop();
+                                    visited='d';
+                                }else if index.x>0&&
+                                n.borrow().value[index.y][index.x-1]==1
+                                &&o.borrow().value[index.y][index.x-1]==0{// <</l
+                                    path.push('l');
+                                    ans.append(
+                                        &mut rat_in_maze(
+                                            maze.clone(),
+                                            map.clone(),
+                                            Position::new(index.y,index.x-1,0),
+                                            path.clone()
+                                        )
+                                    );
+                                    path.pop();
+                                    visited='l';
+                                }else if index.x<n.borrow().value[0].len()-1
+                                &&n.borrow().value[index.y][index.x+1]==1
+                                &&o.borrow().value[index.y][index.x+1]==0{// >>/r
+                                    path.push('r');
+                                    ans.append(
+                                        &mut rat_in_maze(
+                                            maze.clone(),
+                                            map.clone(),
+                                            Position::new(index.y,index.x+1,0),
+                                            path.clone()
+                                        )
+                                    );
+                                    path.pop();
+                                    visited='r';
+                                }else if index.y>0&&
+                                n.borrow().value[index.y-1][index.x]==1
+                                &&o.borrow().value[index.y-1][index.x]==0{// ^/u
+                                    path.push('u');
+                                    ans.append(
+                                        &mut rat_in_maze(
+                                            maze.clone(),
+                                            map.clone(),
+                                            Position::new(index.y-1,index.x,0),
+                                            path.clone()
+                                        )
+                                    );
+                                    path.pop();
+                                    visited='u';
+                                }else{
+                                    o.borrow_mut().value[index.y][index.x]=0;
+                                    return ans;
+                                }// post recursion block
+                                if index.y<n.borrow().value.len()-1&&
+                                n.borrow().value[index.y+1][index.x]==1
+                                &&o.borrow().value[index.y+1][index.x]==0
+                                &&visited!='d'{// v/d
+                                    path.push('d');
+                                    ans.append(
+                                        &mut rat_in_maze(
+                                            maze.clone(),
+                                            map.clone(),
+                                            Position::new(index.y+1,index.x,0),
+                                            path.clone()
+                                        )
+                                    );
+                                    path.pop();
+                                }else if index.x>0&&
+                                n.borrow().value[index.y][index.x-1]==1
+                                &&o.borrow().value[index.y][index.x-1]==0
+                                &&visited!='l'{// <</l
+                                    path.push('l');
+                                    ans.append(
+                                        &mut rat_in_maze(
+                                            maze.clone(),
+                                            map.clone(),
+                                            Position::new(index.y,index.x-1,0),
+                                            path.clone()
+                                        )
+                                    );
+                                    path.pop();
+                                }else if index.x<n.borrow().value[0].len()-1
+                                &&n.borrow().value[index.y][index.x+1]==1
+                                &&o.borrow().value[index.y][index.x+1]==0
+                                &&visited!='r'{// >>/r
+                                    path.push('r');
+                                    ans.append(
+                                        &mut rat_in_maze(
+                                            maze.clone(),
+                                            map.clone(),
+                                            Position::new(index.y,index.x+1,0),
+                                            path.clone()
+                                        )
+                                    );
+                                    path.pop();
+                                }else if index.y>0&&
+                                n.borrow().value[index.y-1][index.x]==1
+                                &&o.borrow().value[index.y-1][index.x]==0
+                                &&visited!='u'{// ^/u
+                                    path.push('u');
+                                    ans.append(
+                                        &mut rat_in_maze(
+                                            maze.clone(),
+                                            map.clone(),
+                                            Position::new(index.y-1,index.x,0),
+                                            path.clone()
+                                        )
+                                    );
+                                    path.pop();
+                                }o.borrow_mut().value[index.y][index.x]=0;
+                                return ans;
+                            }else{
+                                // at destination
+                                ans.push(path.clone());
+                                return ans;
+                            }
+                        }else{return Vec::new();}
+                    },None=>{return Vec::new();}
+                }
+            },None=>{return Vec::new();}
+        }
+    }
+}
+// completing implementing function ^
