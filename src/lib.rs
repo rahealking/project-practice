@@ -2637,10 +2637,10 @@ pub mod backtracing{
                         n.borrow().value[0].len()==o.borrow().value[0].len()
                         &&n.borrow().value.len()>1&&o.borrow().value[0].len()>1{
                             let mut ans:Vec<String>=Vec::new();
-                            let mut visited:char='\0';
+                            let visited:char;
                             if!(n.borrow().value.len()-1==index.y&&o.borrow().value[0].len()-1==index.x){
                                 // no path
-                                o.borrow_mut().value[index.y][index.x]=1;// extreme debugging;
+                                o.borrow_mut().value[index.y][index.x]=1;
                                 if index.y<n.borrow().value.len()-1&&
                                 n.borrow().value[index.y+1][index.x]==1
                                 &&o.borrow().value[index.y+1][index.x]==0{// v/d
@@ -2769,6 +2769,115 @@ pub mod backtracing{
                 }
             },None=>{return Vec::new();}
         }
+    }pub fn n_queen(board:Vec<Vec<char>>)->Vec<Vec<char>>{
+        if board.len()>1&&board[0].len()==board.len(){
+            let pieces=|map:Vec<Vec<char>>|->usize{
+                let mut  count:usize=0;
+                for i in 0..map.len(){
+                    for j in 0..map[1].len(){
+                        if map[i][j]=='q'{count+=1;}
+                    }
+                };return count;
+            };if pieces(board.clone())<board[0].len(){
+                let mut map:Vec<Vec<char>>;
+                for i in 0..board.len(){
+                    for j in 0..board[0].len(){
+                        if board[i][j]=='o'{
+                            map=board.clone();
+                            map[i][j]='q';
+                            // marking paths
+                            for l in 0..map.len()-(map.len()-i){// ^
+                                if map[l][j]!='q'{
+                                    map[l][j]='x';
+                                }else{
+                                    println!("position:({}x{})",i,j);
+                                    for l in 0..map.len(){
+                                        println!("{:?}",map[l]);
+                                    }
+                                    panic!("unexpected position");
+                                }
+                            }for l in 0..super::min
+                            (i as i32,(map.len()-1-j)as i32)
+                            as usize{// ^>>
+                                if map[i-l-1][j+l+1]!='q'{
+                                    map[i-l-1][j+l+1]='x';
+                                }else{
+                                    println!("position:({}x{})",i,j);
+                                    for l in 0..map.len(){
+                                        println!("{:?}",map[l]);
+                                    }
+                                    panic!("unexpected position");
+                                }
+                            }for l in j+1..map.len(){// >>
+                                if map[i][l]!='q'{
+                                    map[i][l]='x';
+                                }else{
+                                    println!("position:({}x{})",i,j);
+                                    for l in 0..map.len(){
+                                        println!("{:?}",map[l]);
+                                    }
+                                    panic!("unexpected position");
+                                }
+                            }for l in 0..super::min
+                            ((map.len()-i-1)as i32,(map.len()-1-j)as i32)
+                            as usize{// >>v
+                                if map[i+l+1][j+l+1]!='q'{
+                                    map[i+l+1][j+l+1]='x';
+                                }else{
+                                    println!("position:({}x{})",i,j);
+                                    for l in 0..map.len(){
+                                        println!("{:?}",map[l]);
+                                    }
+                                    panic!("unexpected position");
+                                }
+                            }for l in i+1..map.len(){// v
+                                if map[l][j]!='q'{
+                                    map[l][j]='x';
+                                }else{
+                                    println!("position:({}x{})",i,j);
+                                    for l in 0..map.len(){
+                                        println!("{:?}",map[l]);
+                                    }
+                                    panic!("unexpected position");
+                                }
+                            }for l in 0..super::min(
+                                j as i32,
+                                (map.len()-i-1)as i32
+                            ) as usize{// v<<
+                                if map[i+l+1][j-l-1]!='q'{
+                                    map[i+l+1][j-l-1]='x';
+                                }else{
+                                    for l in 0..map.len(){
+                                        println!("{:?}",map[l]);
+                                    }
+                                    panic!("unexpected position");
+                                }
+                            }for l in 0..j{
+                                if map[i][l]!='q'{// <<
+                                    map[i][l]='x';
+                                }else{
+                                    println!("position:({}x{})",i,j);
+                                    for l in 0..map.len(){
+                                        println!("{:?}",map[l]);
+                                    }
+                                    panic!("unexpected position");
+                                }
+                            }for l in 0..super::min(i as i32,j as i32) as usize{// <<^
+                                if map[i-l-1][j-l-1]!='q'{
+                                    map[i-l-1][j-l-1]='x';
+                                }else{
+                                    println!("position:({}x{})",i,j);
+                                    for l in 0..map.len(){
+                                        println!("{:?}",map[l]);
+                                    }
+                                    panic!("unexpected position");
+                                }
+                            }map=n_queen(map);
+                            if!(pieces(map.clone())<board[0].len()){return map;}
+                        }
+                    }
+                }
+            }return board;
+        }else{return Vec::new();}
     }
 }
-// completing implementing function ^
