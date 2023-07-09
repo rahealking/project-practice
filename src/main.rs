@@ -18,4 +18,4 @@ fn main(){
             println!("{}",d);
         }
     }
-}
+}// added json support
