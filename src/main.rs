@@ -10,4 +10,4 @@ fn main(){
     );for i in 0..a.len(){
         println!("{:?}",a[i]);
     }
-}
+}// implemented n_queen
