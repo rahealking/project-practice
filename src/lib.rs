@@ -2395,7 +2395,6 @@ pub mod map{
     }impl<T>Iterator for ListIter<T>{
         type Item=node<T>;
         fn next(&mut self)->Option<Self::Item>{
-            println!("i");
             let temp:Self::Item=self.current.clone();
             match self.current.clone().as_ref(){
                 Some(n)=>{
@@ -2433,6 +2432,19 @@ pub mod map{
             }
         }pub fn iter(n:node<T>)->ListIter<T>{
             return ListIter{current:n};
+        }pub fn clone(head:node<T>)->node<T>where T:Clone{
+            match head.as_ref(){
+                Some(n)=>{
+                    let temp:node<T>=Node::clone(n.borrow().next.clone());
+                    let root:node<T>=Node::new(n.borrow().value.clone());
+                    match root.as_ref(){
+                        Some(o)=>{
+                            o.borrow_mut().next=temp;
+                            return root;
+                        },None=>{panic!("unexpected None");}
+                    }
+                },None=>{return head;}
+            }
         }
     }pub struct Pair<K,V>{kye:K,value:V}
     impl<K,V>Pair<K,V>{pub fn new(k:K,v:V)->Pair<K,V>{return Pair{kye:k,value:v};}}
@@ -2879,5 +2891,122 @@ pub mod backtracing{
                 }
             }return board;
         }else{return Vec::new();}
+    }pub fn sudoku(board:[[u8;9];9],c:super::map::node<i128>)->[[u8;9];9]{
+        let mut vertical:super::map::node<u8>;
+        let mut horizontal:super::map::node<u8>;
+        let mut block:super::map::node<u8>;
+        let mut map:[[u8;9];9]=board.clone();
+        let commons
+        =|mut l1:super::map::node<u8>,mut l2:super::map::node<u8>,mut l3:super::map::node<u8>|->super::map::node<u8>{
+            let mut ans:super::map::node<u8>=super::map::Node::blank();loop{
+                match l1.clone().as_ref(){
+                    Some(n)=>{
+                        match l2.clone().as_ref(){
+                            Some(o)=>{
+                                match l3.clone().as_ref(){
+                                    Some(d)=>{
+                                        if n.borrow().value==o.borrow().value&&o.borrow().value==d.borrow().value{
+                                            ans=super::map::Node::push(ans,n.borrow().value);
+                                        }if o.borrow().value<d.borrow().value{
+                                            if o.borrow().value<n.borrow().value{
+                                                l2=o.borrow().next.clone();
+                                            }else{
+                                                l1=n.borrow().next.clone();
+                                            }
+                                        }else{
+                                            if d.borrow().value<n.borrow().value{
+                                                l3=d.borrow().next.clone();
+                                            }else{
+                                                l1=n.borrow().next.clone();
+                                            }
+                                        }
+                                    },None=>{return ans;}
+                                }
+                            },None=>{return ans;}
+                        }
+                    },None=>{return ans;}
+                }
+            }
+        };for i in 0..9{
+            for j in 0..9{
+                if board[i][j]==0{
+                    block=super::map::Node::blank();
+                    vertical=super::map::Node::blank();
+                    horizontal=super::map::Node::blank();
+                    for v in 1..10{
+                        block=super::map::Node::push(block.clone(),v);
+                        vertical=super::map::Node::push(vertical.clone(),v);
+                        horizontal=super::map::Node::push(horizontal.clone(),v);
+                    }// vertical
+                    for l in 0..i{vertical=super::map::Node::remove(vertical.clone(),board[l][j]);}
+                    for l in i+1..9{vertical=super::map::Node::remove(vertical.clone(),board[l][j]);}
+                    // horizontal
+                    for l in 0..j{horizontal=super::map::Node::remove(horizontal.clone(),board[i][l]);}
+                    for l in j+1..9{horizontal=super::map::Node::remove(horizontal.clone(),board[i][l]);}
+                    // block
+                    if i<3{
+                        if j<3{
+                            for x in 0..3{
+                                for y in 0..3{block=super::map::Node::remove(block.clone(),board[x][y]);}
+                            }
+                        }else if j<6{
+                            for x in 0..3{
+                                for y in 3..6{block=super::map::Node::remove(block.clone(),board[x][y]);}
+                            }
+                        }else if j<9{
+                            for x in 0..3{
+                                for y in 6..9{block=super::map::Node::remove(block.clone(),board[x][y]);}
+                            }
+                        }else{panic!("unexpected position");}
+                    }else if i<6{
+                        if j<3{
+                            for x in 3..6{
+                                for y in 0..3{block=super::map::Node::remove(block.clone(),board[x][y]);}
+                            }
+                        }else if j<6{
+                            for x in 3..6{
+                                for y in 3..6{block=super::map::Node::remove(block.clone(),board[x][y]);}
+                            }
+                        }else if j<9{
+                            for x in 3..6{
+                                for y in 6..9{block=super::map::Node::remove(block.clone(),board[x][y]);}
+                            }
+                        }else{panic!("unexpected position");}
+                    }else if i<9{
+                        if j<3{
+                            for x in 6..9{
+                                for y in 0..3{block=super::map::Node::remove(block.clone(),board[x][y]);}
+                            }
+                        }else if j<6{
+                            for x in 6..9{
+                                for y in 3..6{block=super::map::Node::remove(block.clone(),board[x][y]);}
+                            }
+                        }else if j<9{
+                            for x in 6..9{
+                                for y in 6..9{block=super::map::Node::remove(block.clone(),board[x][y]);}
+                            }
+                        }else{panic!("unexpected position");}
+                    }else{
+                        panic!("unexpected position");
+                    }for n in super::map::Node::iter
+                    (commons(vertical.clone(),horizontal.clone(),block.clone())){
+                        match n.as_ref(){
+                            Some(o)=>{
+                                map=board.clone();
+                                map[i][j]=o.borrow().value;
+                                map=sudoku(map,c.clone());
+                                if ||->bool{
+                                    for x in 0..9{
+                                        for y in 0..9{
+                                            if&map[x][y]==&0{return false;}
+                                        }
+                                    }return true;
+                                }(){return map;}
+                            },None=>{panic!("unexpected None");}
+                        }
+                    }return map;
+                }
+            }
+        }return board;
     }
 }

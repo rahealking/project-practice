@@ -1,4 +1,5 @@
 .devcontainer
 .vscode
+temp.rs
 # Added by cargo
 /target
