@@ -2384,6 +2384,9 @@ pub struct MinHeap;impl MinHeap{
     }
 }// ---map---
 pub mod map{
+    use std::fmt::Display;
+
+    #[derive(Debug)]
     pub struct Node<T>{
         pub value:T,
         pub prev:std::rc::Rc<Option<std::cell::RefCell<Node<T>>>>,
@@ -2405,20 +2408,67 @@ pub mod map{
         }
     }impl<T>Node<T>{
         pub fn blank()->node<T>{return std::rc::Rc::new(None);}
-        pub fn new(value:T)->node<T>{
-            return std::rc::Rc::new(
-                Some(
-                    std::cell::RefCell::new(
-                        Node{value,prev:Node::blank(),next:Node::blank()}
-                    )
-                )
-            );
-        }pub fn push(head:node<T>,value:T)->node<T>{
-            match head.as_ref(){
-                Some(n)=>{
-                    let temp:node<T>=Node::push(n.borrow().next.clone(),value);
-                    n.borrow_mut().next=temp;return head;
-                },None=>{return Node::new(value);}
+        pub fn new(value:T)->node<T>
+        {return std::rc::Rc::new(Some(std::cell::RefCell::new(Node{value,prev:Node::blank(),next:Node::blank()})));}
+        pub fn push(head:node<T>,value:T)->node<T>{
+            let temp:node<T>;
+            let mut prev:node<T>=head.clone();
+            let mut next:node<T>=head.clone();
+            loop{
+                match prev.clone().as_ref(){
+                    Some(n)=>{
+                        if std::rc::Rc::ptr_eq(&n.borrow().prev,&next){
+                            match next.as_ref(){
+                                Some(o)=>{
+                                    temp=Node::new(value);
+                                    match temp.as_ref(){
+                                        Some(d)=>{
+                                            d.borrow_mut().next=prev.clone();
+                                            n.borrow_mut().prev=temp.clone();
+                                            o.borrow_mut().next=temp.clone();
+                                            d.borrow_mut().prev=next.clone();
+                                            return head;
+                                        },None=>{panic!("unexpected None");}
+                                    }
+                                },None=>{panic!("unexpected None");}
+                            }
+                        }else{
+                            if match n.borrow().prev.as_ref(){Some(_)=>{true},None=>{false}}
+                            {prev=n.borrow().prev.clone();}else{prev=Node::blank();}
+                        }
+                    },None=>{}
+                }match next.clone().as_ref(){
+                    Some(n)=>{
+                        if std::rc::Rc::ptr_eq(&n.borrow().next,&prev){
+                            match prev.as_ref(){
+                                Some(o)=>{
+                                    temp=Node::new(value);
+                                    match temp.as_ref(){
+                                        Some(d)=>{
+                                            d.borrow_mut().next=prev.clone();
+                                            o.borrow_mut().prev=temp.clone();
+                                            n.borrow_mut().next=temp.clone();
+                                            d.borrow_mut().prev=next.clone();
+                                            return head;
+                                        },None=>{panic!("unexpected None");}
+                                    }
+                                },None=>{panic!("unexpected None");}
+                            }
+                        }else{
+                            if match n.borrow().prev.as_ref(){Some(_)=>{true},None=>{false}}
+                            {next=n.borrow().next.clone();}else{
+                                temp=Node::new(value);
+                                match temp.as_ref(){
+                                    Some(o)=>{
+                                        o.borrow_mut().prev=next.clone();
+                                        n.borrow_mut().next=temp.clone();
+                                        return head;
+                                    },None=>{panic!("unexpected None");}
+                                }
+                            }
+                        }
+                    },None=>{return Node::new(value);}
+                }
             }
         }pub fn remove(head:node<T>,target:T)->node<T>where T:PartialEq{
             match head.as_ref(){
@@ -2426,27 +2476,35 @@ pub mod map{
                     if n.borrow().value==target{return n.borrow().next.clone();}
                     else{
                         let temp:node<T>=Node::remove(n.borrow().next.clone(),target);
-                        n.borrow_mut().next=temp;return head;
+                        n.borrow_mut().next=temp.clone();
+                        match temp.as_ref(){
+                            Some(o)=>{
+                                o.borrow_mut().prev=head.clone();
+                            },None=>{}
+                        }return head;
                     }
                 },None=>{return head;}
             }
         }pub fn iter(n:node<T>)->ListIter<T>{
             return ListIter{current:n};
-        }pub fn clone(head:node<T>)->node<T>where T:Clone{
-            match head.as_ref(){
-                Some(n)=>{
-                    let temp:node<T>=Node::clone(n.borrow().next.clone());
-                    let root:node<T>=Node::new(n.borrow().value.clone());
-                    match root.as_ref(){
-                        Some(o)=>{
-                            o.borrow_mut().next=temp;
-                            return root;
-                        },None=>{panic!("unexpected None");}
+        }pub fn display(mut temp:node<T>)->String where T:Clone+Display{
+            let mut output:String=String::new();
+            loop{
+                match temp.clone().as_ref(){
+                    Some(n)=>{
+                        output.extend(format!("({})->",n.borrow().value.clone()).chars());
+                        temp=n.borrow().next.clone();
+                    },None=>{
+                        output.pop();output.pop();
+                        break;
                     }
-                },None=>{return head;}
-            }
+                }
+            }output.push(']');
+            output.insert(0,'[');
+            return output;
         }
-    }pub struct Pair<K,V>{kye:K,value:V}
+    }#[derive(Debug)]
+    pub struct Pair<K,V>{kye:K,value:V}
     impl<K,V>Pair<K,V>{pub fn new(k:K,v:V)->Pair<K,V>{return Pair{kye:k,value:v};}}
     impl<K:std::fmt::Display,V:std::fmt::Display>std::fmt::Display for Pair<K,V>{
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -2460,18 +2518,46 @@ pub mod map{
         fn compressor(value:usize,bound:usize)->usize{
             return if value>bound{((value/bound+bound)/(value%bound))%bound}else{value};
         }
-    }pub struct HashTable<K:Hash,V>{
+    }#[derive(Debug)]
+    pub struct HashTable<K:Hash,V>{
         pub bucket:Vec<node<Pair<K,V>>>
+    }pub struct TableIter<'a,K:Hash+Clone,V:Clone>{table:&'a HashTable<K,V>,i:usize,j:node<Pair<K,V>>}
+    impl<'a,K:Hash+Clone,V:Clone>Iterator for TableIter<'a,K,V>{
+        type Item=(K,V);
+        fn next(&mut self)->Option<Self::Item>{
+            let value:(K,V);
+            match self.j.clone().as_ref(){
+                Some(n)=>{
+                    value=(n.borrow().value.kye.clone(),n.borrow().value.value.clone());
+                    self.j=n.borrow().next.clone();
+                    return Some(value);
+                },None=>{
+                    if self.i<self.table.bucket.len(){
+                        match self.table.bucket[self.i].as_ref(){
+                            Some(n)=>{
+                                value=(n.borrow().value.kye.clone(),n.borrow().value.value.clone());
+                                self.j=n.borrow().next.clone();
+                                self.i+=1;
+                                return Some(value);
+                            },None=>{
+                                self.i+=1;
+                                return self.next();
+                            }
+                        }
+                    }else{return None;}
+                }
+            }
+        }
     }impl<K:Hash,V>HashTable<K,V>{
         pub fn new()->HashTable<K,V>{return HashTable{bucket:(vec![Node::blank();100])};}
-        pub fn get(&self,kye:K)->Option<V>where K:PartialEq,V:Copy{
+        pub fn get(&self,kye:K)->Option<V>where K:PartialEq,V:Clone{
             let hash:usize=<K as Hash>::compressor(kye.hashcode(),self.bucket.len());
             let mut temp:node<Pair<K,V>>=self.bucket.as_slice()[hash].clone();
             loop{
                 match temp.clone().as_ref(){
                     Some(n)=>{
                         if n.borrow().value.kye==kye{
-                            return Some(n.borrow().value.value);
+                            return Some(n.borrow().value.value.clone());
                         }else{temp=n.borrow().next.clone();}
                     },None=>{return None;}
                 }
@@ -2512,8 +2598,8 @@ pub mod map{
                     },None=>{return;}
                 }
             }
-        }pub fn insert(&mut self,kye:K,value:V)where K:PartialEq+Copy,V:Copy{
-            match self.get(kye){
+        }pub fn insert(&mut self,kye:K,value:V)where K:PartialEq+Clone,V:Clone{
+            match self.get(kye.clone()){
                 Some(_)=>{
                     self.modify(kye,value);
                 },None=>{
@@ -2522,10 +2608,12 @@ pub mod map{
                     arr[hash]=Node::push(arr[hash].clone(),Pair::new(kye,value));
                 }
             }
-        }pub fn or_insert(&mut self,kye:K,value:V)where K:PartialEq+Copy,V:Copy{
-            match self.get(kye){
+        }pub fn or_insert(&mut self,kye:K,value:V)where K:PartialEq+Clone,V:Clone{
+            match self.get(kye.clone()){
                 Some(_)=>{return;},None=>{self.insert(kye,value);return;}
             }
+        }pub fn iter<'a>(&'a self)->TableIter<'a,K,V>where K:Clone,V:Clone{
+            return TableIter{table:self,i:0,j:Node::blank()};
         }
     }impl<K:Hash+std::fmt::Display,V:std::fmt::Display>std::fmt::Display for HashTable<K,V>{
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -2539,7 +2627,7 @@ pub mod map{
                         Some(n)=>{
                             output.extend(
                                 format!(
-                                    "\n[{}][({}:{})",
+                                    "\n[{}]-[({}:{})",
                                     i,n.borrow().value.kye,n.borrow().value.value
                                 ).chars()
                             );temp=n.borrow().next.clone();
@@ -2561,9 +2649,8 @@ pub mod map{
             }
             return std::fmt::write(f,format_args!("{}",output));
         }
-    }impl Hash for i32{
-        fn hashcode(&self)->usize {return *self as usize;}
-    }#[derive(Debug,Clone)]
+    }
+    #[derive(Debug,Clone)]
     pub struct Trie{
         value:char,terminal:bool,pub list:Vec<Option<Trie>>
     }impl Trie{
@@ -3009,4 +3096,210 @@ pub mod backtracing{
             }
         }return board;
     }
-}// --graph --
+}pub mod bgd{// basic generic data-structures
+    use super::map::{Node,node};
+    pub struct Queue<T>{head:node<T>,tail:node<T>}
+    impl<T>Queue<T>{
+        pub fn new()->Queue<T>{return Queue{head:Node::blank(),tail:Node::blank()};}
+        pub fn enqueue(&mut self,value:T){
+            let v:node<T>=Node::new(value);
+            match self.tail.clone().as_ref(){
+                Some(n)=>{
+                    n.borrow_mut().next=v.clone();
+                    match v.as_ref(){
+                        Some(o)=>{
+                            o.borrow_mut().prev=self.tail.clone();
+                        },None=>{panic!("unexpected None");}
+                    }self.tail=v.clone();
+                },None=>{
+                    self.head=v.clone();
+                    self.tail=self.head.clone();
+                }
+            }
+        }pub fn dequeue(&mut self)->node<T>{
+            let value:node<T>=self.head.clone();
+            match self.head.clone().as_ref(){
+                Some(n)=>{
+                    self.head=n.borrow().next.clone();
+                    n.borrow_mut().next=Node::blank();
+                    match self.head.as_ref(){
+                        Some(o)=>{
+                            o.borrow_mut().prev=Node::blank();
+                        },None=>{self.tail=self.head.clone();}
+                    }return value;
+                },None=>{return value;}
+            }
+        }
+    }pub struct Stack<T>{top:node<T>}
+    impl<T>Stack<T>{
+        pub fn new()->Stack<T>{return Stack{top:Node::blank()};}
+        pub fn push(&mut self,value:T){
+            let v:node<T>=Node::new(value);
+            match v.as_ref(){
+                Some(n)=>{
+                    n.borrow_mut().next=self.top.clone();
+                    self.top=v.clone();
+                },None=>{panic!("unexpected None");}
+            }
+        }pub fn pop(&mut self)->node<T>{
+            let value:node<T>=self.top.clone();
+            match self.top.clone().as_ref(){
+                Some(n)=>{
+                    self.top=n.borrow().next.clone();
+                },None=>{}
+            }return value;
+        }pub fn query(&self,target:T)->bool where T:Clone+PartialEq{
+            let mut temp:node<T>=self.top.clone();
+            loop{
+                match temp.clone().as_ref(){
+                    Some(n)=>{
+                        if n.borrow().value==target.clone()
+                        {return true;}else
+                        {temp=n.borrow().next.clone();}
+                    },None=>{return false;}
+                }
+            }
+        }
+    }
+}
+// --graph --
+pub mod graph{
+    use super::{map::{HashTable,node,Node,Hash},bgd::*};
+    #[derive(Debug)]
+    pub struct AdjacencyList<T:PartialEq+Hash+Clone>{pub list:HashTable<T,node<T>>}
+    impl Hash for i32{fn hashcode(&self)->usize{return*self as usize;}}
+    impl<T:PartialEq+Clone+Hash>AdjacencyList<T>{
+        pub fn new()->AdjacencyList<T>{
+            return AdjacencyList{list:HashTable::new()};
+        }pub fn add_edge(&mut self,a:T,b:T,directed:bool){
+            match self.list.get(a.clone()){
+                Some(mut target)=>{
+                    loop{
+                        match target.clone().as_ref(){
+                            Some(n)=>{
+                                if n.borrow().value
+                                ==b{break;}else{
+                                    if match n.borrow().next.as_ref()
+                                    {Some(_)=>{true},None=>{false}}
+                                    {target=n.borrow().next.clone();}else
+                                    {n.borrow_mut().next=Node::new(b.clone());break;}
+                                }
+                            },None=>{
+                                self.list.modify(a.clone(),Node::new(b.clone()));
+                                break;
+                            }
+                        }
+                    }
+                },None=>{self.list.insert(a.clone(),Node::new(b.clone()));}
+            }if !directed{
+                match self.list.get(b.clone()){
+                    Some(mut target)=>{
+                        loop{
+                            match target.clone().as_ref(){
+                                Some(n)=>{
+                                    if n.borrow().value
+                                    ==a{break;}else{
+                                        if match n.borrow().next.as_ref()
+                                        {Some(_)=>{true},None=>{false}}
+                                        {target=n.borrow().next.clone();}else
+                                        {n.borrow_mut().next=Node::new(a);break;}
+                                    }
+                                },None=>{
+                                    self.list.modify(b,Node::new(a));
+                                    break;
+                                }
+                            }
+                        }
+                    },None=>{self.list.insert(b,Node::new(a));}
+                }
+            }else{
+                match self.list.get(b.clone()){
+                    Some(_)=>{},None=>
+                    {self.list.insert(b,Node::blank());}
+                }
+            }
+        }
+    }impl<T:std::fmt::Display+PartialEq+Hash+Clone>std::fmt::Display for AdjacencyList<T>{
+        fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{
+            let mut output:String=String::new();
+            for(k,v)in self.list.iter(){
+                output.extend(format!("[{}]:",k.clone()).chars());
+                output.extend(Node::display(v.clone()).chars());
+                output.push(';');
+                output.push('\n');
+            }output.pop();
+            return write!(f,"{}",output);
+        }
+    }impl<T:PartialEq+Clone+Hash>AdjacencyList<T>{// 
+        pub fn detect_undirected_cycle(&self)where T:std::fmt::Display{
+            //! undirected graph bfs traversal approach
+            let mut visited:HashTable<T,()>=HashTable::new();
+            let mut queue:Queue<T>=Queue::new();
+            let mut parents:HashTable<T,T>=HashTable::new();
+            for(value,_)in self.list.iter(){
+                match visited.get(value.clone())
+                {Some(_)=>{},None=>{queue.enqueue(value);}}
+                loop{
+                    match queue.dequeue().as_ref(){
+                        Some(n)=>{
+                            match self.list.get(n.borrow().value.clone()){
+                                Some(mut edge)=>{
+                                    loop{
+                                        match edge.clone().as_ref(){
+                                            Some(o)=>{
+                                                match visited.get(o.borrow().value.clone()){
+                                                    Some(_)=>{
+                                                        match parents.get(n.borrow().value.clone()){
+                                                            Some(p)=>{
+                                                                if o.borrow().value.clone()!=p{
+                                                                    println!(
+                                                                        "cycle found at {}",
+                                                                        o.borrow().value.clone()
+                                                                    );return;
+                                                                }
+                                                            },None=>{panic!("unexpected None");}
+                                                        }
+                                                    },None=>{
+                                                        parents.insert(
+                                                            o.borrow().value.clone(),
+                                                            n.borrow().value.clone()
+                                                        );queue.enqueue(o.borrow().value.clone());
+                                                    }
+                                                }edge=o.borrow().next.clone();
+                                            },None=>{break;}
+                                        }
+                                    }
+                                },None=>{panic!("unexpected None");}
+                            }visited.insert(n.borrow().value.clone(),());
+                        },None=>{break;}
+                    }
+                }
+            }println!("no cycle detected");
+        }pub fn detect_directed_cycle
+        (&self,position:T,mut visited:HashTable<T,()>,mut syscall:Stack<T>)
+        ->(HashTable<T,()>,Stack<T>)where T:std::fmt::Display{
+            //! recursive dfs traversal approach on directed graph
+            if syscall.query(position.clone()){
+                println!("cycle detected at {position}");return (visited,syscall);
+            }else{
+                match visited.get(position.clone()){
+                    Some(_)=>{
+                    },None=>{
+                        syscall.push(position.clone());
+                        visited.insert(position.clone(),());
+                        for temp in Node
+                        ::iter(self.list.get(position.clone()).unwrap()){
+                            match temp.as_ref(){
+                                Some(n)=>{
+                                    (visited,syscall)=self.detect_directed_cycle(n.borrow().value.clone(),visited,syscall);
+                                },None=>{panic!("unexpected None");}
+                            }
+                        }syscall.pop();
+                    }
+                }
+            }
+            println!("no cycle detected at {position}");
+            return (visited,syscall);
+        }
+    }
+}
