@@ -17,9 +17,10 @@ fn main(){
         match visited0.get(kye){
             Some(_)=>{
             },None=>{
-                (visited0,syscall0)=a.detect_directed_cycle(kye, visited0, syscall0);
+                (visited0,syscall0)=a.topological_traversal(kye, visited0, syscall0);
             }
         }
     }
+    println!("{:#?}",syscall0);
     println!("{a}");
 }

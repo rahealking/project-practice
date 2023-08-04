@@ -3130,7 +3130,8 @@ pub mod backtracing{
                 },None=>{return value;}
             }
         }
-    }pub struct Stack<T>{top:node<T>}
+    }#[derive(Debug)]
+    pub struct Stack<T>{top:node<T>}
     impl<T>Stack<T>{
         pub fn new()->Stack<T>{return Stack{top:Node::blank()};}
         pub fn push(&mut self,value:T){
@@ -3292,7 +3293,7 @@ pub mod graph{
                             match temp.as_ref(){
                                 Some(n)=>{
                                     (visited,syscall)=self.detect_directed_cycle(n.borrow().value.clone(),visited,syscall);
-                                },None=>{panic!("unexpected None");}
+                                },None=>{}
                             }
                         }syscall.pop();
                     }
@@ -3300,6 +3301,22 @@ pub mod graph{
             }
             println!("no cycle detected at {position}");
             return (visited,syscall);
+        }pub fn topological_traversal(&self,position:T,mut visited:HashTable<T,()>,mut ans:Stack<T>)
+        ->(HashTable<T,()>,Stack<T>){
+            match visited.get(position.clone()){
+                Some(_)=>{return(visited,ans);}
+                ,None=>{
+                    visited.insert(position.clone(),());
+                    for temp in Node::iter(self.list.get(position.clone()).unwrap()){
+                        match temp.as_ref(){
+                            Some(n)=>{
+                                (visited,ans)=self.topological_traversal(n.borrow().value.clone(),visited,ans)
+                            },None=>{}
+                        }
+                    }ans.push(position.clone());
+                    return(visited,ans);
+                }
+            }
         }
     }
 }
