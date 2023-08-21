@@ -2503,13 +2503,13 @@ pub mod map{
             output.insert(0,'[');
             return output;
         }
-    }#[derive(Debug)]
-    pub struct Pair<K,V>{kye:K,value:V}
+    }#[derive(Debug,Clone)]
+    pub struct Pair<K,V>{pub kye:K,pub value:V}
     impl<K,V>Pair<K,V>{pub fn new(k:K,v:V)->Pair<K,V>{return Pair{kye:k,value:v};}}
     impl<K:std::fmt::Display,V:std::fmt::Display>std::fmt::Display for Pair<K,V>{
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             return std::fmt::write(
-                f,format_args!("kye:{},value:{}",self.kye,self.value)
+                f,format_args!("{}:{}",self.kye,self.value)
             );
         }
     }
@@ -3097,7 +3097,7 @@ pub mod backtracing{
         }return board;
     }
 }pub mod bgd{// basic generic data-structures
-    use super::map::{Node,node};
+    use super::map::{Node,node,Pair,HashTable,Hash};
     pub struct Queue<T>{head:node<T>,tail:node<T>}
     impl<T>Queue<T>{
         pub fn new()->Queue<T>{return Queue{head:Node::blank(),tail:Node::blank()};}
@@ -3161,18 +3161,132 @@ pub mod backtracing{
                 }
             }
         }
+    }impl<T:std::fmt::Display+Clone>std::fmt::Display for Stack<T>{
+        fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{
+            let mut output:String=String::new();
+            let mut temp:node<T>=self.top.clone();
+            output.push(' ');
+            output.push('_');
+            output.push('\n');
+            loop{
+                match temp.clone().as_ref(){
+                    Some(n)=>{
+                        output.extend(format!("|{}|\n",n.borrow().value.clone()).chars());
+                        temp=n.borrow().next.clone();
+                    },None=>{break;}
+                }
+            }
+            output.push(' ');
+            output.push('-');
+            output.push('\n');
+            return write!(f,"{}",output);
+        }
+    }pub struct AdjacencyList<V:Hash+Clone+PartialEq,W:Clone>
+    {pub list:HashTable<V,node<Pair<V,W>>>}
+    impl<V:Hash+Clone+PartialEq,W:Clone>std::fmt::Display for AdjacencyList<V,W>
+    where V:std::fmt::Display,W:std::fmt::Display{
+        fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{
+            let mut output:String=String::new();
+            for(k,v)in self.list.iter(){
+                output.extend(format!("[{}]:",k.clone()).chars());
+                output.extend(Node::display(v.clone()).chars());
+                output.push(';');
+                output.push('\n');
+            }output.pop();
+            return write!(f,"{}",output);
+        }
+    }
+    impl<V:Hash+Clone+PartialEq,W:Clone>AdjacencyList<V,W>{
+        pub fn new()->AdjacencyList<V,W>{return AdjacencyList{list:HashTable::new()}}
+        pub fn add_edge(&mut self,a:V,b:V,weight:W,directed:bool){
+            match self.list.get(a.clone()){
+                Some(vortex)=>{
+                    let mut temp:node<Pair<V,W>>=vortex;
+                    loop{
+                        match temp.clone().as_ref(){
+                            Some(n)=>{
+                                if n.borrow().value.kye==b.clone(){
+                                    n.borrow_mut().value.value=weight.clone();
+                                    break;
+                                }else{
+                                    if match n.borrow().next.as_ref(){Some(_)=>{true},None=>{false}}
+                                    {temp=n.borrow().next.clone();}else{
+                                        n.borrow_mut().next=Node::new
+                                        (Pair::new(b.clone(),weight.clone()));
+                                        break;
+                                    }
+                                }
+                            },None=>{
+                                self.list.modify(a.clone(),Node::new(Pair::new(b.clone(),weight.clone())));
+                                break;
+                            }
+                        }
+                    }
+                },None=>{self.list.insert(a.clone(),Node::new(Pair::new(b.clone(),weight.clone())));}
+            }if!directed{
+                match self.list.get(b.clone()){
+                    Some(vortex)=>{
+                        let mut temp:node<Pair<V,W>>=vortex;
+                        loop{
+                            match temp.clone().as_ref(){
+                                Some(n)=>{
+                                    if n.borrow().value.kye==a.clone(){
+                                        n.borrow_mut().value.value=weight.clone();
+                                        break;
+                                    }else{
+                                        if match n.borrow().next.as_ref(){Some(_)=>{true},None=>{false}}{
+                                            temp=n.borrow().next.clone();
+                                        }else{
+                                            n.borrow_mut().next=Node::new
+                                            (Pair::new(a.clone(),weight.clone()));
+                                            break;
+                                        }
+                                    }
+                                },None=>{
+                                    self.list.modify(b.clone(),Node::new(Pair::new(a.clone(),weight.clone())));
+                                    break;
+                                }
+                            }
+                        }
+                    },None=>{self.list.insert(b.clone(),Node::new(Pair::new(a.clone(),weight.clone())));}
+                }
+            }else{self.list.or_insert(b.clone(),Node::blank());}
+        }pub fn remove_node(head:node<Pair<V,W>>,target:V)->node<Pair<V,W>>{
+            match head.as_ref(){
+                Some(n)=>{
+                    let temp:node<Pair<V,W>>;
+                    if n.borrow().value.kye.clone()==target.clone()
+                    {return n.borrow().next.clone();}else{
+                        temp=Self::remove_node(n.borrow().next.clone(),target);
+                        n.borrow_mut().next=temp;return head;
+                    }
+                },None=>{return head;}
+            }
+        }pub fn remove_edge(&mut self,a:V,b:V,directed:bool){
+            match self.list.get(a.clone()){
+                Some(edges)=>{
+                    self.list.modify(a.clone(),Self::remove_node(edges,b.clone()));
+                },None=>{}
+            }if!directed{
+                match self.list.get(b.clone()){
+                    Some(edges)=>{
+                        self.list.modify(b.clone(),Self::remove_node(edges,a.clone()));
+                    },None=>{}
+                }
+            }
+        }
     }
 }
 // --graph --
 pub mod graph{
     use super::{map::{HashTable,node,Node,Hash},bgd::*};
     #[derive(Debug)]
-    pub struct AdjacencyList<T:PartialEq+Hash+Clone>{pub list:HashTable<T,node<T>>}
+    pub struct AdjacencyList<T:Hash+Clone>{pub list:HashTable<T,node<T>>}
     impl Hash for i32{fn hashcode(&self)->usize{return*self as usize;}}
-    impl<T:PartialEq+Clone+Hash>AdjacencyList<T>{
+    impl<T:Clone+Hash>AdjacencyList<T>{
         pub fn new()->AdjacencyList<T>{
             return AdjacencyList{list:HashTable::new()};
-        }pub fn add_edge(&mut self,a:T,b:T,directed:bool){
+        }pub fn add_edge(&mut self,a:T,b:T,directed:bool)where T:PartialEq{
             match self.list.get(a.clone()){
                 Some(mut target)=>{
                     loop{
@@ -3220,7 +3334,7 @@ pub mod graph{
                 }
             }
         }
-    }impl<T:std::fmt::Display+PartialEq+Hash+Clone>std::fmt::Display for AdjacencyList<T>{
+    }impl<T:std::fmt::Display+Hash+Clone>std::fmt::Display for AdjacencyList<T>{
         fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{
             let mut output:String=String::new();
             for(k,v)in self.list.iter(){
@@ -3231,8 +3345,8 @@ pub mod graph{
             }output.pop();
             return write!(f,"{}",output);
         }
-    }impl<T:PartialEq+Clone+Hash>AdjacencyList<T>{// 
-        pub fn detect_undirected_cycle(&self)where T:std::fmt::Display{
+    }impl<T:Clone+Hash>AdjacencyList<T>{// 
+        pub fn detect_undirected_cycle(&self)where T:std::fmt::Display+PartialEq{
             //! undirected graph bfs traversal approach
             let mut visited:HashTable<T,()>=HashTable::new();
             let mut queue:Queue<T>=Queue::new();
@@ -3278,7 +3392,7 @@ pub mod graph{
             }println!("no cycle detected");
         }pub fn detect_directed_cycle
         (&self,position:T,mut visited:HashTable<T,()>,mut syscall:Stack<T>)
-        ->(HashTable<T,()>,Stack<T>)where T:std::fmt::Display{
+        ->(HashTable<T,()>,Stack<T>)where T:std::fmt::Display+PartialEq{
             //! recursive dfs traversal approach on directed graph
             if syscall.query(position.clone()){
                 println!("cycle detected at {position}");return (visited,syscall);
@@ -3302,7 +3416,7 @@ pub mod graph{
             println!("no cycle detected at {position}");
             return (visited,syscall);
         }pub fn topological_traversal(&self,position:T,mut visited:HashTable<T,()>,mut ans:Stack<T>)
-        ->(HashTable<T,()>,Stack<T>){
+        ->(HashTable<T,()>,Stack<T>)where T:PartialEq{
             match visited.get(position.clone()){
                 Some(_)=>{return(visited,ans);}
                 ,None=>{
@@ -3315,6 +3429,103 @@ pub mod graph{
                         }
                     }ans.push(position.clone());
                     return(visited,ans);
+                }
+            }
+        }pub fn topological_traversal_in_place(&self)->Stack<T>where T:std::fmt::Display+PartialEq{
+            let mut queue:Queue<T>=Queue::new();
+            let mut visited:Stack<T>=Stack::new();
+            let mut indegrees:HashTable<T,u8>=HashTable::new();
+            for(vortex,edges)in self.list.iter(){
+                indegrees.or_insert(vortex,0);
+                for edge in Node::iter(edges){
+                    match edge.as_ref(){
+                        Some(n)=>{
+                            match indegrees.get(n.borrow().value.clone()){
+                                Some(indegree)=>{
+                                    indegrees.modify(n.borrow().value.clone(),indegree+1);
+                                },None=>{
+                                    indegrees.insert(n.borrow().value.clone(),1);
+                                }
+                            }
+                        },None=>{panic!("unexpected None");}
+                    }
+                }
+            }println!("{}\n",indegrees);
+            for(vortex,_)in self.list.iter(){
+                if!visited.query(vortex.clone()){
+                    match indegrees.get(vortex.clone()){
+                        Some(indegree)=>{
+                            if indegree==0{
+                                queue.enqueue(vortex);
+                            }
+                        },None=>{panic!("unexpected None");}
+                    }
+                }loop{
+                    match queue.dequeue().as_ref(){
+                        Some(n)=>{
+                            println!("dequeued:{}",n.borrow().value.clone());
+                            if!(visited.query(n.borrow().value.clone())){
+                                visited.push(n.borrow().value.clone());
+                                for edge in Node::iter(self.list.get(n.borrow().value.clone()).unwrap()){
+                                    match edge.as_ref(){
+                                        Some(o)=>{
+                                            match indegrees.get(o.borrow().value.clone()){
+                                                Some(indegree)=>{
+                                                    println!("n:{},o:{},id:{}",n.borrow().value.clone(),o.borrow().value.clone(),indegree);
+                                                    if indegree>0{
+                                                        indegrees.modify(o.borrow().value.clone(),indegree-1);
+                                                    }if indegrees.get(o.borrow().value.clone()).unwrap()==0{
+                                                        queue.enqueue(o.borrow().value.clone());
+                                                    }println!("{}",indegrees);
+                                                },None=>{panic!("unexpected None");}
+                                            }
+                                        },None=>{panic!("unexpected None");}
+                                    }
+                                }
+                            }
+                        },None=>{break;}
+                    }
+                }
+            }
+            println!("{}",visited);
+            return Stack::new();
+        }pub fn shortest_path(&self,beginning:T,mut destination:T)where T:std::fmt::Display+PartialEq{
+            let mut parents:HashTable<T,T>=HashTable::new();
+            let mut visited:HashTable<T,()>=HashTable::new();
+            let mut queue:Queue<T>=Queue::new();
+            let mut path:Stack<T>=Stack::new();
+            queue.enqueue(beginning.clone());
+            loop{
+                match queue.dequeue().as_ref(){
+                    Some(n)=>{
+                        visited.insert(n.borrow().value.clone(),());
+                        for edge in Node::iter
+                        (self.list.get(n.borrow().value.clone()).unwrap()){
+                            match edge.as_ref(){
+                                Some(o)=>{
+                                    match visited.get(o.borrow().value.clone()){
+                                        Some(_)=>{},None=>{
+                                            queue.enqueue(o.borrow().value.clone());
+                                            parents.or_insert(o.borrow().value.clone(),n.borrow().value.clone());
+                                        }
+                                    }
+                                },None=>{panic!("unexpected None");}
+                            }
+                        }
+                    },None=>{break;}
+                }
+            }
+            // println!("{}\n{}",path,parents);
+            loop{
+                match parents.get(destination.clone()){
+                    Some(value)=>{
+                        path.push(destination.clone());
+                        destination=value;
+                    },None=>{
+                        path.push(beginning);
+                        println!("{}\n{}",path,parents);
+                        return;
+                    }
                 }
             }
         }
