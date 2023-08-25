@@ -2720,7 +2720,7 @@ pub mod map{
 pub mod backtracing{
     use super::map::node;
     #[derive(Debug,Clone,Copy)]
-    pub struct Position{y:usize,x:usize,z:usize}
+    pub struct Position{pub y:usize,pub x:usize,pub z:usize}
     impl Position{pub fn new(y:usize,x:usize,z:usize)->Position{return Position{y,x,z};}}
     pub fn rat_in_maze(
         maze:node<&[&[u8]]>,map:node<&mut[&mut[u8]]>,// single node (not list);
@@ -3098,6 +3098,11 @@ pub mod backtracing{
     }
 }pub mod bgd{// basic generic data-structures
     use super::map::{Node,node,Pair,HashTable,Hash};
+    pub trait finites
+    where Self:Default{
+        const MAX:Self;
+        const Min:Self;
+    }
     pub struct Queue<T>{head:node<T>,tail:node<T>}
     impl<T>Queue<T>{
         pub fn new()->Queue<T>{return Queue{head:Node::blank(),tail:Node::blank()};}
@@ -3195,8 +3200,7 @@ pub mod backtracing{
             }output.pop();
             return write!(f,"{}",output);
         }
-    }
-    impl<V:Hash+Clone+PartialEq,W:Clone>AdjacencyList<V,W>{
+    }impl<V:Hash+Clone+PartialEq,W:Clone>AdjacencyList<V,W>{
         pub fn new()->AdjacencyList<V,W>{return AdjacencyList{list:HashTable::new()}}
         pub fn add_edge(&mut self,a:V,b:V,weight:W,directed:bool){
             match self.list.get(a.clone()){
@@ -3274,6 +3278,70 @@ pub mod backtracing{
                     },None=>{}
                 }
             }
+        }
+    }impl<V:Hash+Clone+PartialEq,W:Clone>AdjacencyList<V,W>{//
+        pub fn topological_traversal(&self,mut syscall:Stack<V>,mut visited:HashTable<V,()>,index:V)
+        ->(Stack<V>,HashTable<V,()>){
+            match visited.get(index.clone()){
+                Some(_)=>{return(syscall,visited);}
+                ,None=>{
+                    visited.insert(index.clone(),());
+                    match self.list.get(index.clone()){
+                        Some(edges)=>{
+                            for edge in Node::iter(edges){
+                                match edge.as_ref(){
+                                    Some(n)=>{
+                                        (syscall,visited)=self.topological_traversal
+                                        (syscall,visited,n.borrow().value.kye.clone());
+                                    },None=>{panic!("unexpected None");}
+                                }
+                            }
+                        },None=>{}
+                    }syscall.push(index);
+                    return(syscall,visited);
+                }
+            }
+        }/*pub fn shortest_path(&self,a:V,b:V)->W{
+            if a.clone()==b.clone()
+            {return 0;}else{
+                match self.list.get(a.clone()){
+                    Some(edges)=>{
+                        let mut distance:i32=std::i32::MAX;
+                        let mut temp:i32;
+                        for edge in Node::iter(edges){
+                            match edge.as_ref(){
+                                Some(n)=>{
+                                    if n.borrow().value.kye.clone()!=b.clone(){
+                                        temp=self.shortest_path(n.borrow().value.kye.clone(),b.clone());
+                                        if temp<distance
+                                        {distance=temp;}
+                                    }else{
+                                        // if 
+                                    }
+                                },None=>{panic!("unexpected None");}
+                            }
+                        }
+                    },None=>{return std::i32::MIN;}
+                }
+            }
+            return 0;
+        }*/
+        pub fn shortest_paths(&self,a:V)
+        where V:std::fmt::Display{
+            let mut syscall:Stack<V>=Stack::new();
+            let mut visited:HashTable<V,()>=HashTable::new();
+            let mut distance:HashTable<V,i32>=HashTable::new();
+            (syscall,_)=self.topological_traversal(syscall,visited,a.clone());
+            loop{
+                match syscall.pop().as_ref(){
+                    Some(n)=>{
+                        if n.borrow().value.clone()!=a.clone(){
+                            //
+                        }
+                    },None=>{break;}
+                }
+            }
+            return;
         }
     }
 }
