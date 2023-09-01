@@ -30,13 +30,13 @@ pub mod buf{
         else{panic!("unexpected case");}
     }
 }pub mod bgd{// basic generic data-structures
-    pub trait finites
+    pub trait Finites
     where Self:Default{
         const MAX:Self;
-        const Min:Self;
-    }impl finites for i32{
+        const MIN:Self;
+    }impl Finites for i32{
         const MAX:Self=i32::MAX;
-        const Min:Self=i32::MIN;
+        const MIN:Self=i32::MIN;
     }#[derive(Debug,Clone,Copy)]
     pub struct Position{pub y:usize,pub x:usize,pub z:usize}
     impl Position{pub fn new(y:usize,x:usize,z:usize)->Position{return Position{y,x,z};}}
@@ -571,31 +571,31 @@ pub mod buf{
                 }
             }
         }pub fn shortest_path(&self,a:V,b:V)->W
-        where W:finites+PartialEq+std::ops::Add<Output=W>+PartialOrd
+        where W:Finites+PartialEq+std::ops::Add<Output=W>+PartialOrd
         ,V:std::fmt::Display{
             if a.clone()==b.clone()
             {return<W as Default>::default();}
             else{
                 match self.list.get(a.clone()){
                     Some(edges)=>{
-                        let mut temp:W;let mut ans:W=<W as finites>::MAX;
+                        let mut temp:W;let mut ans:W=<W as Finites>::MAX;
                         for edge in Node::iter(edges){
                             match edge.as_ref(){
                                 Some(n)=>{
                                     temp=self.shortest_path
                                     (n.borrow().value.kye.clone(),b.clone());if temp<
-                                    <W as finites>::MAX&&temp.clone()+n.borrow().value.value.clone()<ans
+                                    <W as Finites>::MAX&&temp.clone()+n.borrow().value.value.clone()<ans
                                     .clone(){ans=temp+n.borrow().value.value.clone();}
                                 },None=>{panic!("unexpected None");}
                             }
                         }return ans;
-                    },None=>{return<W as finites>::MAX;}
+                    },None=>{return<W as Finites>::MAX;}
                 }
             }
-        }pub fn shortest_paths(&self,a:V)->HashTable<V,W>where W:finites
+        }/*pub fn shortest_paths(&self,a:V)->HashTable<V,W>where W:Finites
         +PartialEq+std::ops::Add<Output=W>+PartialOrd
         +std::fmt::Display,V:std::fmt::Display{
-            let mut order:Stack<V>;(order,_)=self.topological_traversal
+            let order:Stack<V>;(order,_)=self.topological_traversal
             (Stack::new(),HashTable::new(),a.clone());
             let mut distance:HashTable<V,W>=HashTable::new();
             for(vortex,_)in self.list.iter(){
@@ -615,7 +615,7 @@ pub mod buf{
                 // }
                 break;
             }return distance;
-        }
+        }*/
     }
 }
 // ---map---
