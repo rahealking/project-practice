@@ -2,8 +2,7 @@
 # [continue]:[];
 [dues]:{
     function("k_sum_paths"):
-    binary tree,
-    (_)
+    binary tree,(_):red black tree
 }<--->:[ground]
 [Tree]:
        3

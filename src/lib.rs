@@ -3102,6 +3102,9 @@ pub mod backtracing{
     where Self:Default{
         const MAX:Self;
         const Min:Self;
+    }impl finites for i32{
+        const MAX:Self=i32::MAX;
+        const Min:Self=i32::MIN;
     }
     pub struct Queue<T>{head:node<T>,tail:node<T>}
     impl<T>Queue<T>{
@@ -3301,47 +3304,51 @@ pub mod backtracing{
                     return(syscall,visited);
                 }
             }
-        }/*pub fn shortest_path(&self,a:V,b:V)->W{
+        }pub fn shortest_path(&self,a:V,b:V)->W
+        where W:finites+PartialEq+std::ops::Add<Output=W>+PartialOrd
+        ,V:std::fmt::Display{
             if a.clone()==b.clone()
-            {return 0;}else{
+            {return<W as Default>::default();}
+            else{
                 match self.list.get(a.clone()){
                     Some(edges)=>{
-                        let mut distance:i32=std::i32::MAX;
-                        let mut temp:i32;
+                        let mut temp:W;let mut ans:W=<W as finites>::MAX;
                         for edge in Node::iter(edges){
                             match edge.as_ref(){
                                 Some(n)=>{
-                                    if n.borrow().value.kye.clone()!=b.clone(){
-                                        temp=self.shortest_path(n.borrow().value.kye.clone(),b.clone());
-                                        if temp<distance
-                                        {distance=temp;}
-                                    }else{
-                                        // if 
-                                    }
+                                    temp=self.shortest_path
+                                    (n.borrow().value.kye.clone(),b.clone());if temp<
+                                    <W as finites>::MAX&&temp.clone()+n.borrow().value.value.clone()<ans
+                                    .clone(){ans=temp+n.borrow().value.value.clone();}
                                 },None=>{panic!("unexpected None");}
                             }
-                        }
-                    },None=>{return std::i32::MIN;}
+                        }return ans;
+                    },None=>{return<W as finites>::MAX;}
                 }
             }
-            return 0;
-        }*/
-        pub fn shortest_paths(&self,a:V)
-        where V:std::fmt::Display{
-            let mut syscall:Stack<V>=Stack::new();
-            let mut visited:HashTable<V,()>=HashTable::new();
-            let mut distance:HashTable<V,i32>=HashTable::new();
-            (syscall,_)=self.topological_traversal(syscall,visited,a.clone());
+        }pub fn shortest_paths(&self,a:V)->HashTable<V,W>where W:finites
+        +PartialEq+std::ops::Add<Output=W>+PartialOrd
+        +std::fmt::Display,V:std::fmt::Display{
+            let mut order:Stack<V>;(order,_)=self.topological_traversal
+            (Stack::new(),HashTable::new(),a.clone());
+            let mut distance:HashTable<V,W>=HashTable::new();
+            for(vortex,_)in self.list.iter(){
+                distance.insert(
+                    vortex.clone(),
+                    self.shortest_path(a.clone(),vortex.clone())
+                );
+            }
             loop{
-                match syscall.pop().as_ref(){
-                    Some(n)=>{
-                        if n.borrow().value.clone()!=a.clone(){
-                            //
-                        }
-                    },None=>{break;}
-                }
-            }
-            return;
+                // match order.pop().as_ref(){
+                //     Some(n)=>{
+                //         distance.insert(
+                //             n.borrow().value.clone(),
+                //             self.shortest_path(a.clone(),n.borrow().value.clone())
+                //         );
+                //     },None=>{break;}
+                // }
+                break;
+            }return distance;
         }
     }
 }
