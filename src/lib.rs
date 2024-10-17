@@ -9,7 +9,7 @@ pub mod buf{
         println!("[intput]");
         match std::io::stdin().read_line(&mut word){
             Ok(_)=>{
-                word.pop();
+                word.pop();word.pop();
                 word=word.replace("\n","");
                 word=word.replace("\r","");
                 return word.parse().unwrap();
@@ -19,7 +19,7 @@ pub mod buf{
         let mut word:String=String::new();
         match std::io::stdin().read_line(&mut word){
             Ok(_)=>{
-                word.pop();
+                word.pop();word.pop();
                 return word;
             },Err(e)=>{panic!("{}",e);}
         }
@@ -146,16 +146,54 @@ pub mod buf{
             loop{
                 match temp.clone().as_ref(){
                     Some(n)=>{
-                        output.extend(format!("({})->",n.borrow().value.clone()).chars());
+                        output.extend(format!("({})<=>",n.borrow().value.clone()).chars());
                         temp=n.borrow().next.clone();
                     },None=>{
-                        output.pop();output.pop();
+                        output.pop();output.pop();output.pop();
                         break;
                     }
                 }
             }output.push(']');
             output.insert(0,'[');
             return output;
+        }pub fn prepend(head:node<T>,value:T)->node<T>{
+            match head.as_ref(){
+                Some(n)=>{
+                    let temp:node<T>=Self::new(value);
+                    match temp.as_ref(){
+                        Some(o)=>{
+                            o.borrow_mut().next=head.clone();
+                            n.borrow_mut().prev=temp.clone();
+                            return temp;
+                        },None=>{panic!("unexpected None");}
+                    }
+                },None=>{return Self::new(value);}
+            }
+        }pub fn append(head:node<T>,value:T)->node<T>{
+            match head.as_ref(){
+                Some(n)=>{
+                    let mut temp:node<T>=Self::append(n.borrow().next.clone(),value);
+                    match temp.as_ref(){
+                        Some(o)=>{
+                            o.borrow_mut().prev=head.clone();
+                            n.borrow_mut().next=temp.clone();
+                            return head;
+                        },None=>{panic!("unexpected None");}
+                    }
+                },None=>{return Self::new(value);}
+            }
+        }pub fn pop(head:node<T>)->node<T>{
+            match head.as_ref(){
+                Some(n)=>{
+                    match n.borrow().next.clone().as_ref(){
+                        Some(o)=>{
+                            let temp:node<T>=Self::pop(n.borrow().next.clone());
+                            n.borrow_mut().next=temp;
+                            return head.clone();
+                        },None=>{return Node::blank();}
+                    }
+                },None=>{return head;}
+            }
         }
     }#[derive(Debug,Clone)]
     pub struct Pair<K,V>{pub kye:K,pub value:V}
@@ -624,7 +662,7 @@ pub mod backtracing{
     use super::bgd::{Node,node,Position};
     use super::buf;
     pub fn rat_in_maze(
-        maze:node<&[&[u8]]>,map:node<&mut[&mut[u8]]>,// single node (not list);
+        maze:node<&[&[u8]]>,map:node<&mut[&mut[u8]]>,
         index:Position,mut path:String
     )->Vec<String>{
         // [d][l][r][u];
@@ -997,5 +1035,54 @@ pub mod backtracing{
             }
         }return board;
     }
+}// --graph --
+// <debug and test>
+pub mod dat{
+    use super::{buf,bgd};
+    pub fn node(){
+        let mut input_choice:String;
+        println!("choose datatype\n[float/string]");
+        input_choice=buf::input();
+        match input_choice.as_str(){
+            "float"=>{
+                let mut head:bgd::node<f64>=bgd::Node::blank();
+                let mut input_value:f64;
+                loop{
+                    println!("choose action\n
+                    [exit,prepend,append,pop,shift,print,clear,insert,remove,find,replace,get]");
+                }
+            },"string"=>{
+                let mut head:bgd::node<String>=bgd::Node::blank();
+                let mut input_value:String;
+                loop{
+                    println!("choose action\n[exit,prepend,append,pop,shift,print,clear,insert,remove,find,replace,get]");
+                    input_choice=buf::input();
+                    match input_choice.as_str(){
+                        "exit"=>{std::process::exit(0);}
+                        ,"prepend"=>{
+                            println!("[value]");
+                            input_value=buf::input();
+                            head=bgd::Node::prepend(head,input_value.clone());
+                        },"append"=>{
+                            println!("[value]");
+                            input_value=buf::input();
+                            head=bgd::Node::append(head,input_value.clone());
+                        },"pop"=>{
+                            println!("[value]");
+                            input_value=buf::input();
+                            head=bgd::Node::pop(head);
+                        },"shift"=>{
+                        },"print"=>{println!("{}",bgd::Node::display(head.clone()));}
+                        ,"clear"=>{
+                        },"insert"=>{
+                        },"remove"=>{
+                        },"find"=>{
+                        },"replace"=>{
+                        },"get"=>{
+                        },_=>{println!("command unavailable");}
+                    }
+                }
+            },_=>{println!("datatype unsupported:[{:?}]",input_choice);}
+        }
+    }
 }
-// --graph --
