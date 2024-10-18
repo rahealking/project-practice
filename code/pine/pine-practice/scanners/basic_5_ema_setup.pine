@@ -1,0 +1,38 @@
+//@version=5
+indicator(
+     title="basic_5_ema_setup"
+     ,shorttitle="setup5ema"
+     ,overlay=true
+   )// variable declaration
+color colour=#000000
+float side=na
+// period count for exponential moving average 
+var int ema_period=input.int(
+     defval=5,
+     title="ema_period"
+   )// plotting ema 
+plot(
+     series=ta.ema(
+          source=close,
+          length=ema_period
+      ),
+     title="ema",
+     color=color.silver
+     ,display=display.none
+   )// validating conditions for bullish setup
+if ta.ema(source=close,length=ema_period)[1]<=low[1] and close<=low[1]
+    colour:=color.orange
+    side:=high
+// validating conditions for bearish setup
+if ta.ema(source=close,length=ema_period)[1]>=high[1] and close>=high[1]
+    colour:=color.teal
+    side:=low
+    ema_period
+// plotting bullish signals on chart
+plot(
+     series=side,
+     linewidth=5,
+     color=colour,
+     title="scanner",
+     style=plot.style_cross
+   )
