@@ -1,0 +1,23 @@
+{
+    "indentRainbow.colors":[
+        "rgba(255,255,000,0.04)",
+        "rgba(000,255,255,0.04)",
+        "rgba(000,255,000,0.04)",
+        "rgba(255,000,255,0.04)",
+        "rgba(000,000,255,0.04)"
+        // "rgba(255,000,000,0.84)",
+    ],"workbench.colorTheme":"Laetus Black",
+    "workbench.colorCustomizations":{
+        "editorLineNumber.foreground":"#ffffff",
+        "editorLineNumber.activeForeground":"#00ff40",
+    },"cSpell.words":[
+        "codespace",
+        "devcontainer",
+        "github",
+        "hashcode",
+        "intput",
+        "signum",
+        "sudoku",
+        "syscall"
+    ],
+}
