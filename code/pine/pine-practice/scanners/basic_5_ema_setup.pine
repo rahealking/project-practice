@@ -1,3 +1,4 @@
+// © bossagent5010
 //@version=5
 indicator(
      title="basic_5_ema_setup"

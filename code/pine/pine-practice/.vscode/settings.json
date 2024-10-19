@@ -1,13 +1,15 @@
 {
-    "rust-analyzer.workspace.discoverConfig": null,
-    "cSpell.words": [
+    "rust-analyzer.workspace.discoverConfig":null,
+    "workbench.colorTheme":"Dark Theme (#4)",
+    "cSpell.words":[
+        "bossagent5010",
         "colour",
         "defval",
         "indctor",
         "linewidth",
         "shorttitle"
-    ],
-    "editor.insertSpaces": true,
-    "editor.fontSize": 12,
-    "editor.tabSize": 4,
+    ],"workbench.colorCustomizations":{
+        "editorLineNumber.foreground":"#ffffff",
+        "editorLineNumber.activeForeground":"#00ff40"
+    }
 }
